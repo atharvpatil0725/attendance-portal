@@ -30,9 +30,30 @@
 </div>
 
 <script>
+// 🔒 DEVICE LOCK CHECK: Runs instantly when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+
+    const savedName = localStorage.getItem("registered_name");
+    const savedPhone = localStorage.getItem("registered_phone");
+
+    // If this phone already has an identity saved, fill it and freeze the input boxes
+    if (savedName && savedPhone) {
+        nameInput.value = savedName;
+        phoneInput.value = savedPhone;
+        nameInput.disabled = true;
+        phoneInput.disabled = true;
+        nameInput.style.backgroundColor = "#e0e0e0";
+        phoneInput.style.backgroundColor = "#e0e0e0";
+    }
+});
+
 function sendData(type) {
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
     const msg = document.getElementById('msg');
 
     if (!name || !phone) {
@@ -44,7 +65,6 @@ function sendData(type) {
     msg.style.color = "#333";
     msg.innerText = "Automating GPS Location Capture...";
 
-    // This block triggers the browser's automatic GPS capture
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
             const data = {
@@ -55,16 +75,30 @@ function sendData(type) {
                 longitude: position.coords.longitude
             };
 
-            // Sends data to your local node backend
             fetch('/api/attendance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
             .then(res => res.json())
-            .then(() => {
-                msg.style.color = "green";
-                msg.innerText = `Successfully recorded ${type}!`;
+            .then((result) => {
+                if (result.status === "error") {
+                    msg.style.color = "red";
+                    msg.innerText = result.message; // Shows error like 'You already punched in today' or 'Outside office'
+                } else {
+                    msg.style.color = "green";
+                    msg.innerText = `Successfully recorded ${type}!`;
+
+                    // 🔒 LOCK DEVICE IDENTITY: Save their details on their browser permanently after first successful punch
+                    localStorage.setItem("registered_name", name);
+                    localStorage.setItem("registered_phone", phone);
+                    
+                    // Freeze inputs right away
+                    nameInput.disabled = true;
+                    phoneInput.disabled = true;
+                    nameInput.style.backgroundColor = "#e0e0e0";
+                    phoneInput.style.backgroundColor = "#e0e0e0";
+                }
             })
             .catch(err => {
                 msg.style.color = "red";

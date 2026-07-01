@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .buttons { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
+        .in { background-color: #2e7d32; }
+        .out { background-color: #c62828; }
+        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Staff Check-In</h2>
+    <input type="text" id="name" placeholder="Your Name">
+    <input type="tel" id="phone" placeholder="Mobile Number">
+    
+    <div class="buttons">
+        <button class="in" onclick="sendData('IN')">Punch IN</button>
+        <button class="out" onclick="sendData('OUT')">Punch OUT</button>
+    </div>
+    <div id="msg"></div>
+</div>
+
+<script>
+function sendData(type) {
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const msg = document.getElementById('msg');
+
+    if (!name || !phone) {
+        msg.style.color = "red";
+        msg.innerText = "Please enter Name and Phone.";
+        return;
+    }
+
+    msg.style.color = "#333";
+    msg.innerText = "Automating GPS Location Capture...";
+
+    // This block triggers the browser's automatic GPS capture
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const data = {
+                name: name,
+                phone: phone,
+                action: type,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            };
+
+            // Sends data to your local node backend
+            fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(() => {
+                msg.style.color = "green";
+                msg.innerText = `Successfully recorded ${type}!`;
+            })
+            .catch(err => {
+                msg.style.color = "red";
+                msg.innerText = "Error transmitting data.";
+            });
+        }, (error) => {
+            msg.style.color = "red";
+            msg.innerText = "GPS Error: Please open this in Chrome and allow location access.";
+        }, { enableHighAccuracy: true });
+    } else {
+        msg.innerText = "GPS not supported on this browser.";
+    }
+}
+</script>
+
+</body>
+</html>

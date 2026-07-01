@@ -80,39 +80,59 @@ function sendData(type) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
-            .then(res => res.json())
-            .then((result) => {
-                if (result.status === "error") {
-                    msg.style.color = "red";
-                    msg.innerText = result.message; // Shows error like 'You already punched in today' or 'Outside office'
-                } else {
-                    msg.style.color = "green";
-                    msg.innerText = `Successfully recorded ${type}!`;
-
-                    // 🔒 LOCK DEVICE IDENTITY: Save their details on their browser permanently after first successful punch
+            .then(res => {
+                // 🔒 ULTRA-SAFE LOCK: If the server accepted the request (status 200), lock it immediately!
+                if (res.ok) {
                     localStorage.setItem("registered_name", name);
                     localStorage.setItem("registered_phone", phone);
                     
-                    // Freeze inputs right away
                     nameInput.disabled = true;
                     phoneInput.disabled = true;
                     nameInput.style.backgroundColor = "#e0e0e0";
                     phoneInput.style.backgroundColor = "#e0e0e0";
                 }
+                return res.json().catch(() => ({})); // Prevents crashes if backend returns empty text
             })
-            .catch(err => {
+            .then((result) => {
+                if (result && result.status === "error") {
+                    msg.style.color = "red";
+                    msg.innerText = result.message || "Server rejected the request.";
+
+                    // Unlock if the server threw an explicit geo-fence/time error
+                    localStorage.removeItem("registered_name");
+                    localStorage.removeItem("registered_phone");
+                    nameInput.disabled = false;
+                    phoneInput.disabled = false;
+                    nameInput.style.backgroundColor = "";
+                    phoneInput.style.backgroundColor = "";
+                } else {
+                    msg.style.color = "green";
+                    msg.innerText = `Successfully recorded ${type}!`;
+                }
+            })
+            .catch((err) => {
+                console.error(err);
                 msg.style.color = "red";
-                msg.innerText = "Error transmitting data.";
+                msg.innerText = "Failed to send data to server.";
+                // don't lock on network failure
+                localStorage.removeItem("registered_name");
+                localStorage.removeItem("registered_phone");
+                nameInput.disabled = false;
+                phoneInput.disabled = false;
+                nameInput.style.backgroundColor = "";
+                phoneInput.style.backgroundColor = "";
             });
-        }, (error) => {
+        }, (geoErr) => {
             msg.style.color = "red";
-            msg.innerText = "GPS Error: Please open this in Chrome and allow location access.";
-        }, { enableHighAccuracy: true });
+            msg.innerText = "Unable to get GPS location.";
+        }, { enableHighAccuracy: true, timeout: 10000 });
     } else {
-        msg.innerText = "GPS not supported on this browser.";
+        msg.style.color = "red";
+        msg.innerText = "Geolocation is not supported by this browser.";
     }
 }
-</script>
 
+// End of script
+</script>
 </body>
 </html>

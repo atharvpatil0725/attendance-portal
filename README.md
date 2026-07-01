@@ -31,7 +31,7 @@ The application is built on a decoupled, secure 3-tier architecture to ensure ze
  ##     🛠️ Complete Deployment & Installation Guide
 Follow these exact steps to set up the development environment, configure the backend server coordinates, and deploy the architecture to production.
 
-📋 Prerequisites
+# 📋 Prerequisites
 Before beginning, ensure you have the following frameworks installed on your local operating machine:
 
 Node.js (v18.x or higher recommended)
@@ -40,19 +40,19 @@ Git Version Control CLI
 
 A modern web browser with Location Services enabled (Chrome/Safari)
 
-💻 Step 1: Local Environment Setup
+##  💻 Step 1: Local Environment Setup
 1. Clone the Repository
 Open your terminal or command prompt, navigate to your desired workspace directory, and clone the codebase:
-
 Bash
 git clone https://github.com/YOUR_USERNAME/attendance-portal.git
 cd attendance-portal
+
 2. Install Project Dependencies
 Run the installation command to populate the node_modules folder with all required runtime environments (Express, etc.):
-
 Bash
 npm install
-🏢 Step 2: System Configuration Benchmark
+
+##  🏢 Step 2: System Configuration Benchmark
 Before launching the instance, you must supply the server with your office parameters. Open server.js in VS Code and adjust the coordinate variables:
 
 JavaScript
@@ -60,27 +60,26 @@ JavaScript
 const TARGET_LAT = 21.1458;         // Replace with your office Latitude
 const TARGET_LON = 79.0882;         // Replace with your office Longitude
 const ALLOWED_RADIUS_METERS = 100;   // The maximum allowed fence distance (in meters)
-🛰️ Step 3: Launching the App Locally
-To execute and run the application instance on your local machine for testing purposes:
 
+##  🛰️ Step 3: Launching the App Locally
+To execute and run the application instance on your local machine for testing purposes:
 Bash
 npm start
 Once executed, open your browser and navigate to: http://localhost:3000
 
-🚀 Step 4: Shipping to Production (Render Deployment)
+##  🚀 Step 4: Shipping to Production (Render Deployment)
 Since your repository utilizes an active Render automatic pipeline, deploying updates only requires a Git push sequence.
 
 Run these terminal commands within VS Code to push your changes live:
 
 Bash
-# 1. Stage all modified configuration architectures
+ 1. Stage all modified configuration architectures
 git add .
 
-# 2. Commit the changes with an identity tag
+ 2. Commit the changes with an identity tag
 git commit -m "Deploy production instance with geofencing and anti-proxy rules"
 
-# 3. Push to main to fire off Render's build trigger
-git push origin main
+ 3. Push to main to fire off Render's build trigger git push origin main
 ⏳ Verifying the Live Run:
 Navigate to your Render Dashboard.
 

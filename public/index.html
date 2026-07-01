@@ -9,9 +9,11 @@
         .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .buttons { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; transition: background-color 0.3s; }
         .in { background-color: #2e7d32; }
         .out { background-color: #c62828; }
+        /* Style for disabled greyed-out buttons */
+        button:disabled { background-color: #9e9e9e !important; cursor: not-allowed; opacity: 0.6; }
         #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
@@ -23,22 +25,27 @@
     <input type="tel" id="phone" placeholder="Mobile Number">
     
     <div class="buttons">
-        <button class="in" onclick="sendData('IN')">Punch IN</button>
-        <button class="out" onclick="sendData('OUT')">Punch OUT</button>
+        <button id="btn-in" class="in" onclick="sendData('IN')">Punch IN</button>
+        <button id="btn-out" class="out" onclick="sendData('OUT')">Punch OUT</button>
     </div>
     <div id="msg"></div>
 </div>
 
 <script>
-// 🔒 DEVICE LOCK CHECK: Runs instantly when the page loads
 document.addEventListener("DOMContentLoaded", () => {
     const nameInput = document.getElementById('name');
     const phoneInput = document.getElementById('phone');
+    const btnIn = document.getElementById('btn-in');
 
     const savedName = localStorage.getItem("registered_name");
     const savedPhone = localStorage.getItem("registered_phone");
+    const lastPunchDate = localStorage.getItem("last_punch_date");
+    const lastPunchType = localStorage.getItem("last_punch_type");
 
-    // If this phone already has an identity saved, fill it and freeze the input boxes
+    // Get today's date format (e.g., "2026-07-01") to compare
+    const todayStr = new Date().toDateString();
+
+    // 🔒 Lock Identity
     if (savedName && savedPhone) {
         nameInput.value = savedName;
         phoneInput.value = savedPhone;
@@ -47,11 +54,18 @@ document.addEventListener("DOMContentLoaded", () => {
         nameInput.style.backgroundColor = "#e0e0e0";
         phoneInput.style.backgroundColor = "#e0e0e0";
     }
+
+    // 🛑 GREY OUT BUTTON IF ALREADY PUNCHED IN TODAY
+    if (lastPunchDate === todayStr && lastPunchType === "IN") {
+        btnIn.disabled = true;
+        btnIn.innerText = "Already Punched IN";
+    }
 });
 
 function sendData(type) {
     const nameInput = document.getElementById('name');
     const phoneInput = document.getElementById('phone');
+    const btnIn = document.getElementById('btn-in');
     const name = nameInput.value.trim();
     const phone = phoneInput.value.trim();
     const msg = document.getElementById('msg');
@@ -61,6 +75,9 @@ function sendData(type) {
         msg.innerText = "Please enter Name and Phone.";
         return;
     }
+
+    // Prevent double clicking while processing
+    if (type === 'IN' && btnIn.disabled) return;
 
     msg.style.color = "#333";
     msg.innerText = "Automating GPS Location Capture...";
@@ -81,8 +98,8 @@ function sendData(type) {
                 body: JSON.stringify(data)
             })
             .then(res => {
-                // 🔒 ULTRA-SAFE LOCK: If the server accepted the request (status 200), lock it immediately!
                 if (res.ok) {
+                    // Lock identity fields
                     localStorage.setItem("registered_name", name);
                     localStorage.setItem("registered_phone", phone);
                     
@@ -90,49 +107,46 @@ function sendData(type) {
                     phoneInput.disabled = true;
                     nameInput.style.backgroundColor = "#e0e0e0";
                     phoneInput.style.backgroundColor = "#e0e0e0";
+
+                    // 🔒 SAVE THE PUNCH STATE BASED ON ACTION
+                    const todayStr = new Date().toDateString();
+                    localStorage.setItem("last_punch_date", todayStr);
+                    localStorage.setItem("last_punch_type", type);
+
+                    if (type === "IN") {
+                        btnIn.disabled = true;
+                        btnIn.innerText = "Already Punched IN";
+                    } else if (type === "OUT") {
+                        // If they punch OUT, we reset the IN button state for flexibility, 
+                        // or you can keep it locked depending on company policy.
+                        btnIn.disabled = false;
+                        btnIn.innerText = "Punch IN";
+                    }
                 }
-                return res.json().catch(() => ({})); // Prevents crashes if backend returns empty text
+                return res.json().catch(() => ({}));
             })
             .then((result) => {
-                if (result && result.status === "error") {
+                if (result.status === "error") {
                     msg.style.color = "red";
-                    msg.innerText = result.message || "Server rejected the request.";
-
-                    // Unlock if the server threw an explicit geo-fence/time error
-                    localStorage.removeItem("registered_name");
-                    localStorage.removeItem("registered_phone");
-                    nameInput.disabled = false;
-                    phoneInput.disabled = false;
-                    nameInput.style.backgroundColor = "";
-                    phoneInput.style.backgroundColor = "";
+                    msg.innerText = result.message;
                 } else {
                     msg.style.color = "green";
                     msg.innerText = `Successfully recorded ${type}!`;
                 }
             })
-            .catch((err) => {
-                console.error(err);
+            .catch(err => {
                 msg.style.color = "red";
-                msg.innerText = "Failed to send data to server.";
-                // don't lock on network failure
-                localStorage.removeItem("registered_name");
-                localStorage.removeItem("registered_phone");
-                nameInput.disabled = false;
-                phoneInput.disabled = false;
-                nameInput.style.backgroundColor = "";
-                phoneInput.style.backgroundColor = "";
+                msg.innerText = "Error transmitting data.";
             });
-        }, (geoErr) => {
+        }, (error) => {
             msg.style.color = "red";
-            msg.innerText = "Unable to get GPS location.";
-        }, { enableHighAccuracy: true, timeout: 10000 });
+            msg.innerText = "GPS Error: Please allow location access.";
+        }, { enableHighAccuracy: true });
     } else {
-        msg.style.color = "red";
-        msg.innerText = "Geolocation is not supported by this browser.";
+        msg.innerText = "GPS not supported.";
     }
 }
-
-// End of script
 </script>
+
 </body>
 </html>

@@ -3,254 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Employee Portal</title>
+    <title>Attendance Portal</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .box { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 360px; text-align: center; border-top: 5px solid #1a73e8; }
-        h2 { color: #202124; margin-bottom: 5px; font-size: 24px; }
-        .subtitle { color: #5f6368; font-size: 13px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Tab Navigation System */
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #e8eaed; }
-        .tab { flex: 1; padding: 10px; cursor: pointer; color: #5f6368; font-weight: bold; font-size: 14px; transition: all 0.3s; }
-        .tab.active { color: #1a73e8; border-bottom: 3px solid #1a73e8; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dadce0; border-radius: 6px; box-sizing: border-box; font-size: 14px; transition: all 0.3s; }
-        input:focus, select:focus { border-color: #1a73e8; outline: none; box-shadow: 0 0 0 3px rgba(26,115,232,0.2); }
-        .phone-container { position: relative; display: flex; align-items: center; }
-        .country-code { position: absolute; left: 12px; font-weight: bold; color: #5f6368; font-size: 14px; pointer-events: none; }
-        .phone-container input { padding-left: 45px; }
-        
-        .buttons { display: flex; gap: 12px; margin-top: 20px; }
-        button { flex: 1; padding: 14px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; transition: background-color 0.2s; }
-        .in { background-color: #1e7e34; }
-        .in:hover { background-color: #155724; }
-        .out { background-color: #d93025; }
-        .out:hover { background-color: #a51d14; }
-        .submit-btn { background-color: #1a73e8; width: 100%; margin-top: 10px; }
-        .submit-btn:hover { background-color: #1557b0; }
-        button:disabled { background-color: #e8eaed !important; color: #9aa0a6 !important; cursor: not-allowed; opacity: 1; }
-        
-        #msg { margin-top: 18px; font-weight: 600; font-size: 13px; padding: 10px; border-radius: 4px; display: none; }
-        .date-row { display: flex; gap: 10px; text-align: left; }
-        .date-row div { flex: 1; }
-        .date-row label { font-size: 11px; color: #5f6368; font-weight: bold; text-transform: uppercase; }
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .buttons { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; transition: background-color 0.3s; }
+        .in { background-color: #2e7d32; }
+        .out { background-color: #c62828; }
+        /* Style for disabled greyed-out buttons */
+        button:disabled { background-color: #9e9e9e !important; cursor: not-allowed; opacity: 0.6; }
+        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>Employee Portal</h2>
-    <div class="subtitle">Secure Attendance & Operations</div>
+    <h2>Staff Check-In</h2>
+    <input type="text" id="name" placeholder="Your Name">
+    <input type="tel" id="phone" placeholder="Mobile Number">
     
-    <!-- Navigation Tabs -->
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('attendance')">Attendance</div>
-        <div class="tab" onclick="switchTab('leave')">Leave Request</div>
+    <div class="buttons">
+        <button id="btn-in" class="in" onclick="sendData('IN')">Punch IN</button>
+        <button id="btn-out" class="out" onclick="sendData('OUT')">Punch OUT</button>
     </div>
-
-    <!-- Identity Form Inputs -->
-    <input type="text" id="name" placeholder="Full Name">
-    <div class="phone-container">
-        <span class="country-code">+91</span>
-        <input type="tel" id="phone" placeholder="10-Digit Mobile Number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-    </div>
-
-    <hr style="border: 0; border-top: 1px solid #e8eaed; margin: 20px 0;">
-
-    <!-- TAB 1: ATTENDANCE INTERFACE -->
-    <div id="attendance-sec" class="tab-content active">
-        <div class="buttons">
-            <button id="btn-in" class="in" onclick="sendAttendance('IN')">Punch IN</button>
-            <button id="btn-out" class="out" onclick="sendAttendance('OUT')">Punch OUT</button>
-        </div>
-    </div>
-
-    <!-- TAB 2: UPDATE SPECIFIC LEAVE LEOPARD INTERFACE -->
-    <div id="leave-sec" class="tab-content">
-        <div class="date-row">
-            <div>
-                <label>Start Date</label>
-                <input type="date" id="leave-start">
-            </div>
-            <div>
-                <label>End Date</label>
-                <input type="date" id="leave-end">
-            </div>
-        </div>
-        <select id="leave-type">
-            <option value="" disabled selected>Select Leave Type</option>
-            <option value="MEDICAL LEAVE">MEDICAL LEAVE</option>
-            <option value="CASUAL LEAVE">CASUAL LEAVE</option>
-            <option value="EARNED LEAVE">EARNED LEAVE</option>
-        </select>
-        <button class="submit-btn" onclick="sendLeaveRequest()">Submit Leave Application</button>
-    </div>
-
     <div id="msg"></div>
 </div>
 
 <script>
-function getDeviceFingerprint() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.textBaseline = "top";
-    ctx.font = "14px 'Arial'";
-    ctx.fillText("AntiProxyCheck", 2, 2);
-    let hash = 0;
-    const str = canvas.toDataURL() + navigator.userAgent + screen.width + "x" + screen.height;
-    for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash |= 0;
-    }
-    return "DEV-" + Math.abs(hash).toString(16).toUpperCase();
-}
-
-const deviceFingerprint = getDeviceFingerprint();
-
 document.addEventListener("DOMContentLoaded", () => {
     const nameInput = document.getElementById('name');
     const phoneInput = document.getElementById('phone');
     const btnIn = document.getElementById('btn-in');
-
+// Automatically set the Start Date field to today's date on load
+const startDateInput = document.getElementById('startDate'); // or whatever your input ID is
+if (startDateInput) {
+    startDateInput.value = new Date().toISOString().split('T')[0];
+}
     const savedName = localStorage.getItem("registered_name");
     const savedPhone = localStorage.getItem("registered_phone");
     const lastPunchDate = localStorage.getItem("last_punch_date");
     const lastPunchType = localStorage.getItem("last_punch_type");
+
+    // Get today's date format (e.g., "2026-07-01") to compare
     const todayStr = new Date().toDateString();
 
+    // 🔒 Lock Identity
     if (savedName && savedPhone) {
         nameInput.value = savedName;
-        phoneInput.value = savedPhone.replace("+91", "");
+        phoneInput.value = savedPhone;
         nameInput.disabled = true;
         phoneInput.disabled = true;
-        nameInput.style.backgroundColor = "#f1f3f4";
-        phoneInput.style.backgroundColor = "#f1f3f4";
+        nameInput.style.backgroundColor = "#e0e0e0";
+        phoneInput.style.backgroundColor = "#e0e0e0";
     }
 
+    // 🛑 GREY OUT BUTTON IF ALREADY PUNCHED IN TODAY
     if (lastPunchDate === todayStr && lastPunchType === "IN") {
         btnIn.disabled = true;
         btnIn.innerText = "Already Punched IN";
     }
 });
 
-function switchTab(type) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('msg').style.display = "none";
-
-    if (type === 'attendance') {
-        document.querySelectorAll('.tab')[0].classList.add('active');
-        document.getElementById('attendance-sec').classList.add('active');
-    } else {
-        document.querySelectorAll('.tab')[1].classList.add('active');
-        document.getElementById('leave-sec').classList.add('active');
-    }
-}
-
-function displayMessage(text, isError) {
+function sendData(type) {
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+    const btnIn = document.getElementById('btn-in');
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
     const msg = document.getElementById('msg');
-    msg.style.display = "block";
-    msg.style.backgroundColor = isError ? "#fce8e6" : "#e6f4ea";
-    msg.style.color = isError ? "#c5221f" : "#137333";
-    msg.innerText = text;
-}
 
-function getCredentials() {
-    const name = document.getElementById('name').value.trim();
-    const rawPhone = document.getElementById('phone').value.trim();
-    if (!name || !rawPhone) {
-        displayMessage("Error: Name and Phone Fields are completely mandatory.", true);
-        return null;
-    }
-    if (rawPhone.length !== 10) {
-        displayMessage("Invalid Entry: Phone number must be exactly 10 digits.", true);
-        return null;
-    }
-    return { name, phone: "+91" + rawPhone };
-}
-
-function sendAttendance(type) {
-    const creds = getCredentials();
-    if (!creds) return;
-
-    displayMessage("Securing high-precision GPS lock...", false);
-
-    navigator.geolocation.getCurrentPosition((position) => {
-        const payload = {
-            route: "attendance",
-            name: creds.name,
-            phone: creds.phone,
-            action: type,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            deviceId: deviceFingerprint
-        };
-
-        fireRequest(payload, () => {
-            localStorage.setItem("registered_name", creds.name);
-            localStorage.setItem("registered_phone", creds.phone);
-            localStorage.setItem("last_punch_date", new Date().toDateString());
-            localStorage.setItem("last_punch_type", type);
-            if (type === "IN") {
-                document.getElementById('btn-in').disabled = true;
-                document.getElementById('btn-in').innerText = "Already Punched IN";
-            }
-        });
-    }, () => {
-        displayMessage("GPS Failure: Please allow device tracking permissions.", true);
-    }, { enableHighAccuracy: true });
-}
-
-function sendLeaveRequest() {
-    const creds = getCredentials();
-    if (!creds) return;
-
-    const startDate = document.getElementById('leave-start').value;
-    const endDate = document.getElementById('leave-end').value;
-    const leaveType = document.getElementById('leave-type').value;
-
-    if (!startDate || !endDate || !leaveType) {
-        displayMessage("Validation Error: Fill out dates and leave type selection.", true);
+    if (!name || !phone) {
+        msg.style.color = "red";
+        msg.innerText = "Please enter Name and Phone.";
         return;
     }
 
-    const payload = {
-        route: "leave",
-        name: creds.name,
-        phone: creds.phone,
-        startDate: startDate,
-        endDate: endDate,
-        leaveType: leaveType
-    };
+    // Prevent double clicking while processing
+    if (type === 'IN' && btnIn.disabled) return;
 
-    displayMessage("Filing leave application to management systems...", false);
-    fireRequest(payload, () => {
-        document.getElementById('leave-start').value = "";
-        document.getElementById('leave-end').value = "";
-        document.getElementById('leave-type').value = "";
-    });
-}
+    msg.style.color = "#333";
+    msg.innerText = "Automating GPS Location Capture...";
 
-function fireRequest(payload, successCallback) {
-    fetch('/api/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(async res => {
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message || "Network validation error.");
-        return result;
-    })
-    .then(result => {
-        displayMessage(result.message || "Operation successfully processed!", false);
-        if(successCallback) successCallback();
-    })
-    .catch(err => displayMessage(err.message, true));
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const data = {
+                name: name,
+                phone: phone,
+                action: type,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            };
+
+            fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (res.ok) {
+                    // Lock identity fields
+                    localStorage.setItem("registered_name", name);
+                    localStorage.setItem("registered_phone", phone);
+                    
+                    nameInput.disabled = true;
+                    phoneInput.disabled = true;
+                    nameInput.style.backgroundColor = "#e0e0e0";
+                    phoneInput.style.backgroundColor = "#e0e0e0";
+
+                    // 🔒 SAVE THE PUNCH STATE BASED ON ACTION
+                    const todayStr = new Date().toDateString();
+                    localStorage.setItem("last_punch_date", todayStr);
+                    localStorage.setItem("last_punch_type", type);
+
+                    if (type === "IN") {
+                        btnIn.disabled = true;
+                        btnIn.innerText = "Already Punched IN";
+                    } else if (type === "OUT") {
+                        // If they punch OUT, we reset the IN button state for flexibility, 
+                        // or you can keep it locked depending on company policy.
+                        btnIn.disabled = false;
+                        btnIn.innerText = "Punch IN";
+                    }
+                }
+                return res.json().catch(() => ({}));
+            })
+            .then((result) => {
+                if (result.status === "error") {
+                    msg.style.color = "red";
+                    msg.innerText = result.message;
+                } else {
+                    msg.style.color = "green";
+                    msg.innerText = `Successfully recorded ${type}!`;
+                }
+            })
+            .catch(err => {
+                msg.style.color = "red";
+                msg.innerText = "Error transmitting data.";
+            });
+        }, (error) => {
+            msg.style.color = "red";
+            msg.innerText = "GPS Error: Please allow location access.";
+        }, { enableHighAccuracy: true });
+    } else {
+        msg.innerText = "GPS not supported.";
+    }
 }
 </script>
+
 </body>
 </html>

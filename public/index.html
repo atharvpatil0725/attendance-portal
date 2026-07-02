@@ -35,25 +35,20 @@
     <h2>Employee Portal</h2>
     <div class="subtitle">Secure Self-Service Hub</div>
 
-    <!-- STAGE 1: ASK PHONE -->
-    <div id="phoneSection">
+    <!-- CREDENTIAL ENTRY GATES -->
+    <div id="loginSection">
         <div class="form-group">
-            <label>Registered Mobile Number</label>
-            <input type="tel" id="phone" placeholder="Enter Mobile Number">
+            <label>Registered Full Name</label>
+            <input type="text" id="loginName" placeholder="e.g. Mohini Madhav Puranik">
         </div>
-        <button class="btn-primary" onclick="requestOtpToken()">Send Access OTP</button>
+        <div class="form-group">
+            <label>Password (Mobile Number)</label>
+            <input type="password" id="loginPassword" placeholder="Enter your 10-digit mobile number">
+        </div>
+        <button class="btn-primary" onclick="submitPortalLogin()">Log In Securely</button>
     </div>
 
-    <!-- STAGE 2: ASK OTP -->
-    <div id="otpSection" style="display:none;">
-        <div class="form-group">
-            <label>6-Digit Verification Code</label>
-            <input type="number" id="otpCode" placeholder="Enter Code">
-        </div>
-        <button class="btn-primary" style="background-color:#5f6368;" onclick="submitOtpVerification()">Verify & Enter</button>
-    </div>
-
-    <!-- STAGE 3: DASHBOARD WORKSPACE -->
+    <!-- MAIN CONSOLE SPACE -->
     <div id="portalContent" style="display:none;">
         <div class="form-group">
             <label>Logged In User</label>
@@ -71,13 +66,11 @@
             <div class="tab" onclick="switchTab('leave')">Leave Request</div>
         </div>
 
-        <!-- ATTENDANCE TAB PUNCHES -->
         <div id="attendancePane" class="pane active">
             <button class="btn-in" onclick="sendAttendance('IN')">Punch IN</button>
             <button class="btn-out" onclick="sendAttendance('OUT')">Punch OUT</button>
         </div>
 
-        <!-- LEAVE TAB OPERATIONS -->
         <div id="leavePane" class="pane">
             <div style="display:flex; gap:10px;" class="form-group">
                 <div><label>Start</label><input type="date" id="startDate"></div>
@@ -107,44 +100,31 @@
         msgDiv.innerText = text; msgDiv.style.display = 'block';
     }
 
-    async function requestOtpToken() {
-        const phone = document.getElementById('phone').value.trim();
-        if(!phone) return showMessage("Enter mobile number.", true);
-        showMessage("Checking roster records...", false);
+    async function submitPortalLogin() {
+        const name = document.getElementById('loginName').value.trim();
+        const pass = document.getElementById('loginPassword').value.trim();
         
-        const res = await (await fetch('/api/portal', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ route: "request_otp", phone: phone })
-        })).json();
+        if(!name || !pass) return showMessage("Please enter both Name and Password.", true);
+        showMessage("Verifying security parameters...", false);
         
-        if(res.status === "success") {
-            document.getElementById('phoneSection').style.display = 'none';
-            document.getElementById('otpSection').style.display = 'block';
-            showMessage("OTP sent to your system administrator's email account!", false);
-        } else { showMessage(res.message, true); }
-    }
+        try {
+            const res = await (await fetch('/api/portal', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ route: "portal_login", empName: name, password: pass })
+            })).json();
 
-    async function submitOtpVerification() {
-        const phone = document.getElementById('phone').value.trim();
-        const otp = document.getElementById('otpCode').value.trim();
-        
-        const res = await (await fetch('/api/portal', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ route: "verify_otp", phone: phone, otp: otp })
-        })).json();
-
-        if(res.status === "success") {
-            sessionUser = res.data.profile; sessionUser.phone = phone;
-            document.getElementById('otpSection').style.display = 'none';
-            document.getElementById('portalContent').style.display = 'block';
-            document.getElementById('displayProfile').value = `${sessionUser.empName} (${sessionUser.empCode})`;
-            document.getElementById('bal-el').innerText = res.data.balances.el;
-            document.getElementById('bal-cl').innerText = res.data.balances.cl;
-            document.getElementById('bal-ml').innerText = res.data.balances.ml;
-            document.getElementById('msg').style.display = 'none';
-        } else { showMessage(res.message, true); }
+            if(res.status === "success") {
+                sessionUser = res.data.profile;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('portalContent').style.display = 'block';
+                document.getElementById('displayProfile').value = `${sessionUser.empName} (${sessionUser.empCode})`;
+                document.getElementById('bal-el').innerText = res.data.balances.el;
+                document.getElementById('bal-cl').innerText = res.data.balances.cl;
+                document.getElementById('bal-ml').innerText = res.data.balances.ml;
+                document.getElementById('msg').style.display = 'none';
+            } else { showMessage(res.message, true); }
+        } catch(e) { showMessage("Database server validation error.", true); }
     }
 
     function switchTab(type) {
@@ -181,10 +161,8 @@
             leaveType: document.getElementById('leaveType').value 
         };
         const res = await (await fetch('/api/portal', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) })).json();
-        if(res.status === 'success') {
-            showMessage(res.message, false);
-            setTimeout(() => submitOtpVerification(), 1500); // Dynamic update on screen
-        } else { showMessage(res.message, true); }
+        if(res.status === 'success') showMessage(res.message, false);
+        else showMessage(res.message, true);
     }
 </script>
 </body>

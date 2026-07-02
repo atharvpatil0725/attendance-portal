@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ⚠️ MAKE SURE THIS MATCHES YOUR ACTIVE GOOGLE WEB APP URL EXACTLY:
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwGruwvBhcrfUGRJxoX8UJ1zatjVwrifmT1jfaWPsOCGvGyQi3NApEo4NIGpnadagz/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwGrUwVBhcrTfUGR3xoX8UJ1zatjVwrifmT1jFaWPsoCGvYGqI3NApEo4NIgpnadagz/exec";
 
 const TARGET_LAT = 21.1458;   
 const TARGET_LON = 79.0882;   

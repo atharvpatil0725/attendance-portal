@@ -3,126 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Employee Portal</title>
+    <title>Employee Portal</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 450px; border-top: 5px solid #1a73e8; }
-        h2 { text-align: center; color: #202124; margin-bottom: 4px; font-size: 24px; }
-        .subtitle { text-align: center; color: #5f6368; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
+        h2, .subtitle { text-align: center; }
+        .subtitle { color: #5f6368; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
         .tabs { display: flex; border-bottom: 2px solid #e8eaed; margin-bottom: 25px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #5f6368; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #5f6368; font-weight: 600; }
         .tab.active { color: #1a73e8; border-bottom: 3px solid #1a73e8; margin-bottom: -2px; }
         .form-group { margin-bottom: 18px; }
-        .row { display: flex; gap: 12px; }
-        .row .form-group { flex: 1; }
         label { display: block; font-size: 11px; font-weight: 600; color: #5f6368; margin-bottom: 6px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; color: #3c4043; background: #f8f9fa; transition: all 0.2s; }
-        input:focus, select:focus { outline: none; border-color: #1a73e8; background: white; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
-        input:disabled { background-color: #e8eaed; color: #70757a; cursor: not-allowed; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
-        .btn-primary { background-color: #1a73e8; color: white; }
-        .btn-primary:hover { background-color: #1557b0; }
-        .btn-in { background-color: #34a853; color: white; margin-bottom: 10px; }
-        .btn-in:hover { background-color: #2b8c44; }
-        .btn-out { background-color: #ea4335; color: white; }
-        .btn-out:hover { background-color: #c53929; }
-        .pane { display: none; }
-        .pane.active { display: block; }
-        #msg { margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 500; display: none; }
-        .msg-error { background: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
-        .msg-success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 6px; background: #f8f9fa; font-size: 14px; }
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-box { padding: 12px; border-radius: 8px; text-align: center; color: white; font-weight: bold; font-size: 11px; }
+        .bg-el { background-color: #1a73e8; } .bg-cl { background-color: #f4b400; } .bg-ml { background-color: #0f9d58; }
+        .stat-box span { display: block; font-size: 20px; margin-top: 4px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; color: white;}
+        .btn-primary { background-color: #1a73e8; }
+        .btn-in { background-color: #34a853; margin-bottom: 10px; }
+        .btn-out { background-color: #ea4335; }
+        .pane { display: none; } .pane.active { display: block; }
+        #msg { margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center; display: none; font-size: 13px; }
+        .msg-error { background: #fce8e6; color: #c5221f; } .msg-success { background: #e6f4ea; color: #137333; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>Employee Portal</h2>
-    <div class="subtitle">Secure Attendance & Operations</div>
+    <div class="subtitle">Secure Self-Service Hub</div>
 
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('attendance')">Attendance</div>
-        <div class="tab" onclick="switchTab('leave')">Leave Request</div>
-    </div>
-
-    <!-- COMMON IDENTITY PROFILE BLOCK -->
-    <div class="form-group">
-        <input type="text" id="name" placeholder="Your Name">
-    </div>
-    <div class="form-group">
-        <input type="tel" id="phone" placeholder="Mobile Number">
-    </div>
-
-    <!-- ATTENDANCE PANE -->
-    <div id="attendancePane" class="pane active">
-        <button class="btn-in" id="btn-in" onclick="sendAttendance('IN')">Punch IN</button>
-        <button class="btn-out" id="btn-out" onclick="sendAttendance('OUT')">Punch OUT</button>
-    </div>
-
-    <!-- LEAVE REQUEST PANE -->
-    <div id="leavePane" class="pane">
-        <div class="row">
-            <div class="form-group">
-                <label>Start Date</label>
-                <input type="date" id="startDate">
-            </div>
-            <div class="form-group">
-                <label>End Date</label>
-                <input type="date" id="endDate">
-            </div>
-        </div>
+    <!-- STAGE 1: ASK PHONE -->
+    <div id="phoneSection">
         <div class="form-group">
-            <label>Leave Type</label>
-            <select id="leaveType">
-                <option value="" disabled selected>Select Leave Type</option>
-                <option value="MEDICAL LEAVE">MEDICAL LEAVE</option>
-                <option value="CASUAL LEAVE">CASUAL LEAVE</option>
-                <option value="EARNED LEAVE">EARNED LEAVE</option>
-            </select>
+            <label>Registered Mobile Number</label>
+            <input type="tel" id="phone" placeholder="Enter Mobile Number">
         </div>
-        <button class="btn-primary" onclick="sendLeave()">Submit Leave Application</button>
+        <button class="btn-primary" onclick="requestOtpToken()">Send Access OTP</button>
+    </div>
+
+    <!-- STAGE 2: ASK OTP -->
+    <div id="otpSection" style="display:none;">
+        <div class="form-group">
+            <label>6-Digit Verification Code</label>
+            <input type="number" id="otpCode" placeholder="Enter Code">
+        </div>
+        <button class="btn-primary" style="background-color:#5f6368;" onclick="submitOtpVerification()">Verify & Enter</button>
+    </div>
+
+    <!-- STAGE 3: DASHBOARD WORKSPACE -->
+    <div id="portalContent" style="display:none;">
+        <div class="form-group">
+            <label>Logged In User</label>
+            <input type="text" id="displayProfile" disabled style="font-weight:bold;">
+        </div>
+
+        <div class="dashboard">
+            <div class="stat-box bg-el">EL Bal<span id="bal-el">0</span></div>
+            <div class="stat-box bg-cl">CL Bal<span id="bal-cl">0</span></div>
+            <div class="stat-box bg-ml">ML Bal<span id="bal-ml">0</span></div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('attendance')">Attendance</div>
+            <div class="tab" onclick="switchTab('leave')">Leave Request</div>
+        </div>
+
+        <!-- ATTENDANCE TAB PUNCHES -->
+        <div id="attendancePane" class="pane active">
+            <button class="btn-in" onclick="sendAttendance('IN')">Punch IN</button>
+            <button class="btn-out" onclick="sendAttendance('OUT')">Punch OUT</button>
+        </div>
+
+        <!-- LEAVE TAB OPERATIONS -->
+        <div id="leavePane" class="pane">
+            <div style="display:flex; gap:10px;" class="form-group">
+                <div><label>Start</label><input type="date" id="startDate"></div>
+                <div><label>End</label><input type="date" id="endDate"></div>
+            </div>
+            <div class="form-group">
+                <label>Leave Type</label>
+                <select id="leaveType">
+                    <option value="CASUAL LEAVE">CASUAL LEAVE</option>
+                    <option value="MEDICAL LEAVE">MEDICAL LEAVE</option>
+                    <option value="EARNED LEAVE">EARNED LEAVE</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="sendLeave()">Submit Application</button>
+        </div>
     </div>
 
     <div id="msg"></div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const nameInput = document.getElementById('name');
-        const phoneInput = document.getElementById('phone');
-        const btnIn = document.getElementById('btn-in');
+    let sessionUser = null;
 
-        // Automatically pre-fill today's date for Leave Start Date
-        const startDateInput = document.getElementById('startDate');
-        if (startDateInput) {
-            startDateInput.value = new Date().toISOString().split('T')[0];
-        }
+    function showMessage(text, isError) {
+        const msgDiv = document.getElementById('msg');
+        msgDiv.className = isError ? 'msg-error' : 'msg-success';
+        msgDiv.innerText = text; msgDiv.style.display = 'block';
+    }
 
-        const savedName = localStorage.getItem("registered_name");
-        const savedPhone = localStorage.getItem("registered_phone");
-        const lastPunchDate = localStorage.getItem("last_punch_date");
-        const lastPunchType = localStorage.getItem("last_punch_type");
+    async function requestOtpToken() {
+        const phone = document.getElementById('phone').value.trim();
+        if(!phone) return showMessage("Enter mobile number.", true);
+        showMessage("Checking roster records...", false);
+        
+        const res = await (await fetch('/api/portal', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ route: "request_otp", phone: phone })
+        })).json();
+        
+        if(res.status === "success") {
+            document.getElementById('phoneSection').style.display = 'none';
+            document.getElementById('otpSection').style.display = 'block';
+            showMessage("OTP sent to your system administrator's email account!", false);
+        } else { showMessage(res.message, true); }
+    }
 
-        const todayStr = new Date().toDateString();
+    async function submitOtpVerification() {
+        const phone = document.getElementById('phone').value.trim();
+        const otp = document.getElementById('otpCode').value.trim();
+        
+        const res = await (await fetch('/api/portal', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ route: "verify_otp", phone: phone, otp: otp })
+        })).json();
 
-        if (savedName && savedPhone) {
-            nameInput.value = savedName;
-            phoneInput.value = savedPhone;
-            nameInput.disabled = true;
-            phoneInput.disabled = true;
-        }
-
-        if (lastPunchDate === todayStr && lastPunchType === "IN") {
-            btnIn.disabled = true;
-            btnIn.innerText = "Already Punched IN";
-        }
-    });
+        if(res.status === "success") {
+            sessionUser = res.data.profile; sessionUser.phone = phone;
+            document.getElementById('otpSection').style.display = 'none';
+            document.getElementById('portalContent').style.display = 'block';
+            document.getElementById('displayProfile').value = `${sessionUser.empName} (${sessionUser.empCode})`;
+            document.getElementById('bal-el').innerText = res.data.balances.el;
+            document.getElementById('bal-cl').innerText = res.data.balances.cl;
+            document.getElementById('bal-ml').innerText = res.data.balances.ml;
+            document.getElementById('msg').style.display = 'none';
+        } else { showMessage(res.message, true); }
+    }
 
     function switchTab(type) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-        document.getElementById('msg').style.display = 'none';
-
         if (type === 'attendance') {
             document.querySelectorAll('.tab')[0].classList.add('active');
             document.getElementById('attendancePane').classList.add('active');
@@ -132,89 +159,32 @@
         }
     }
 
-    function showMessage(text, isError) {
-        const msgDiv = document.getElementById('msg');
-        msgDiv.className = isError ? 'msg-error' : 'msg-success';
-        msgDiv.innerText = text;
-        msgDiv.style.display = 'block';
-    }
-
-    function getGPSLocation() {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) return reject("Geolocation unsupported by browser.");
-            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
-        });
-    }
-
     async function sendAttendance(action) {
-        const name = document.getElementById('name').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        if (!name || !phone) return showMessage("Please specify your name and mobile parameters.", true);
-
-        showMessage("Extracting coordinate values...", false);
-        try {
-            const pos = await getGPSLocation();
-            const payload = {
-                route: "attendance",
-                action: action,
-                name: name,
-                phone: phone,
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                deviceId: navigator.userAgent
-            };
-
-            const response = await fetch('/api/portal', {
+        showMessage("Getting GPS location...", false);
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const res = await (await fetch('/api/portal', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const res = await response.json();
-
-            if (res.status === 'success') {
-                localStorage.setItem("registered_name", name);
-                localStorage.setItem("registered_phone", phone);
-                localStorage.setItem("last_punch_date", new Date().toDateString());
-                localStorage.setItem("last_punch_type", action);
-                showMessage(res.message, false);
-                setTimeout(() => window.location.reload(), 2000);
-            } else {
-                showMessage(res.message, true);
-            }
-        } catch (err) {
-            showMessage(typeof err === 'string' ? err : "GPS Acquisition Failure. Allow permissions.", true);
-        }
+                body: JSON.stringify({
+                    route: "attendance", action: action, name: sessionUser.empName, phone: sessionUser.phone,
+                    latitude: pos.coords.latitude, longitude: pos.coords.longitude
+                })
+            })).json();
+            if(res.status === 'success') showMessage(`Successfully Punched ${action}!`, false);
+        }, () => showMessage("GPS missing or blocked.", true));
     }
 
     async function sendLeave() {
-        const name = document.getElementById('name').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const leaveType = document.getElementById('leaveType').value;
-
-        if (!name || !phone || !startDate || !endDate || !leaveType) {
-            return showMessage("All input form elements are required to file leave.", true);
-        }
-
-        showMessage("Submitting registration logs...", false);
-        try {
-            const payload = { route: "leave", name: name, phone: phone, startDate: startDate, endDate: endDate, leaveType: leaveType };
-            const response = await fetch('/api/portal', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const res = await response.json();
-
-            if (res.status === 'success') {
-                showMessage(res.message, false);
-            } else {
-                showMessage(res.message, true);
-            }
-        } catch (err) {
-            showMessage("Network Exception. Try again.", true);
-        }
+        const payload = { 
+            route: "leave", empCode: sessionUser.empCode, empName: sessionUser.empName, phone: sessionUser.phone, 
+            startDate: document.getElementById('startDate').value, endDate: document.getElementById('endDate').value, 
+            leaveType: document.getElementById('leaveType').value 
+        };
+        const res = await (await fetch('/api/portal', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) })).json();
+        if(res.status === 'success') {
+            showMessage(res.message, false);
+            setTimeout(() => submitOtpVerification(), 1500); // Dynamic update on screen
+        } else { showMessage(res.message, true); }
     }
 </script>
 </body>

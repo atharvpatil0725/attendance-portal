@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ⚠️ MAKE SURE THIS MATCHES YOUR ACTIVE GOOGLE WEB APP URL EXACTLY:
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfyichwGrlWvRhcrTfUGR3xnX8U1zatjVwrifmT1jFaWpSoGvYgGqI3NApFo4NTgpnadagz/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwGrUwVBhcrTfUGR3xoX8UJ1zatjVwrifmT1jFaWPsoCGvYGqI3NApEo4NIgpnadagz/exec";
 
 // Your exact geofencing parameters from image_79e6c1.jpg
 const TARGET_LAT = 21.1458;

@@ -141,17 +141,44 @@
 
     async function sendAttendance(action) {
         showMessage("Getting GPS location...", false);
+        
+        const gpsOptions = {
+            enableHighAccuracy: true,
+            timeout: 6000,          // Quick timeout so users don't wait forever
+            maximumAge: 30000        // Accept a fresh location cache
+        };
+
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const res = await (await fetch('/api/portal', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    route: "attendance", action: action, name: sessionUser.empName, phone: sessionUser.phone,
-                    latitude: pos.coords.latitude, longitude: pos.coords.longitude
-                })
-            })).json();
-            if(res.status === 'success') showMessage(`Successfully Punched ${action}!`, false);
-        }, () => showMessage("GPS missing or blocked.", true));
+            showMessage(`Syncing punch data...`, false);
+            try {
+                const res = await (await fetch('/api/portal', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        route: "attendance", 
+                        action: action, 
+                        name: sessionUser.empName, 
+                        phone: sessionUser.phone || "",
+                        latitude: pos.coords.latitude, 
+                        longitude: pos.coords.longitude
+                    })
+                })).json();
+                
+                if(res.status === 'success') {
+                    showMessage(`Successfully Punched ${action}!`, false);
+                } else {
+                    showMessage(res.message, true);
+                }
+            } catch (err) {
+                showMessage("Server connection failed.", true);
+            }
+        }, (error) => {
+            if(error.code === error.TIMEOUT) {
+                showMessage("GPS Timeout: Please verify location is toggled ON or try again.", true);
+            } else {
+                showMessage("GPS access denied or unavailable.", true);
+            }
+        }, gpsOptions);
     }
 
     async function sendLeave() {

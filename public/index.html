@@ -3,154 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Portal</title>
+    <title>Enterprise Employee Portal</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .buttons { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; transition: background-color 0.3s; }
-        .in { background-color: #2e7d32; }
-        .out { background-color: #c62828; }
-        /* Style for disabled greyed-out buttons */
-        button:disabled { background-color: #9e9e9e !important; cursor: not-allowed; opacity: 0.6; }
-        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 450px; border-top: 5px solid #1a73e8; }
+        h2 { text-align: center; color: #202124; margin-bottom: 4px; font-size: 24px; }
+        .subtitle { text-align: center; color: #5f6368; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
+        .tabs { display: flex; border-bottom: 2px solid #e8eaed; margin-bottom: 25px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #5f6368; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .tab.active { color: #1a73e8; border-bottom: 3px solid #1a73e8; margin-bottom: -2px; }
+        .form-group { margin-bottom: 18px; }
+        .row { display: flex; gap: 12px; }
+        .row .form-group { flex: 1; }
+        label { display: block; font-size: 11px; font-weight: 600; color: #5f6368; margin-bottom: 6px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; color: #3c4043; background: #f8f9fa; transition: all 0.2s; }
+        input:focus, select:focus { outline: none; border-color: #1a73e8; background: white; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
+        input:disabled { background-color: #e8eaed; color: #70757a; cursor: not-allowed; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn-primary { background-color: #1a73e8; color: white; }
+        .btn-primary:hover { background-color: #1557b0; }
+        .btn-in { background-color: #34a853; color: white; margin-bottom: 10px; }
+        .btn-in:hover { background-color: #2b8c44; }
+        .btn-out { background-color: #ea4335; color: white; }
+        .btn-out:hover { background-color: #c53929; }
+        .pane { display: none; }
+        .pane.active { display: block; }
+        #msg { margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 500; display: none; }
+        .msg-error { background: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
+        .msg-success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h2>Staff Check-In</h2>
-    <input type="text" id="name" placeholder="Your Name">
-    <input type="tel" id="phone" placeholder="Mobile Number">
-    
-    <div class="buttons">
-        <button id="btn-in" class="in" onclick="sendData('IN')">Punch IN</button>
-        <button id="btn-out" class="out" onclick="sendData('OUT')">Punch OUT</button>
+<div class="card">
+    <h2>Employee Portal</h2>
+    <div class="subtitle">Secure Attendance & Operations</div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('attendance')">Attendance</div>
+        <div class="tab" onclick="switchTab('leave')">Leave Request</div>
     </div>
+
+    <!-- COMMON IDENTITY PROFILE BLOCK -->
+    <div class="form-group">
+        <input type="text" id="name" placeholder="Your Name">
+    </div>
+    <div class="form-group">
+        <input type="tel" id="phone" placeholder="Mobile Number">
+    </div>
+
+    <!-- ATTENDANCE PANE -->
+    <div id="attendancePane" class="pane active">
+        <button class="btn-in" id="btn-in" onclick="sendAttendance('IN')">Punch IN</button>
+        <button class="btn-out" id="btn-out" onclick="sendAttendance('OUT')">Punch OUT</button>
+    </div>
+
+    <!-- LEAVE REQUEST PANE -->
+    <div id="leavePane" class="pane">
+        <div class="row">
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Leave Type</label>
+            <select id="leaveType">
+                <option value="" disabled selected>Select Leave Type</option>
+                <option value="MEDICAL LEAVE">MEDICAL LEAVE</option>
+                <option value="CASUAL LEAVE">CASUAL LEAVE</option>
+                <option value="EARNED LEAVE">EARNED LEAVE</option>
+            </select>
+        </div>
+        <button class="btn-primary" onclick="sendLeave()">Submit Leave Application</button>
+    </div>
+
     <div id="msg"></div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const nameInput = document.getElementById('name');
-    const phoneInput = document.getElementById('phone');
-    const btnIn = document.getElementById('btn-in');
-// Automatically set the Start Date field to today's date on load
-const startDateInput = document.getElementById('startDate'); // or whatever your input ID is
-if (startDateInput) {
-    startDateInput.value = new Date().toISOString().split('T')[0];
-}
-    const savedName = localStorage.getItem("registered_name");
-    const savedPhone = localStorage.getItem("registered_phone");
-    const lastPunchDate = localStorage.getItem("last_punch_date");
-    const lastPunchType = localStorage.getItem("last_punch_type");
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameInput = document.getElementById('name');
+        const phoneInput = document.getElementById('phone');
+        const btnIn = document.getElementById('btn-in');
 
-    // Get today's date format (e.g., "2026-07-01") to compare
-    const todayStr = new Date().toDateString();
+        // Automatically pre-fill today's date for Leave Start Date
+        const startDateInput = document.getElementById('startDate');
+        if (startDateInput) {
+            startDateInput.value = new Date().toISOString().split('T')[0];
+        }
 
-    // 🔒 Lock Identity
-    if (savedName && savedPhone) {
-        nameInput.value = savedName;
-        phoneInput.value = savedPhone;
-        nameInput.disabled = true;
-        phoneInput.disabled = true;
-        nameInput.style.backgroundColor = "#e0e0e0";
-        phoneInput.style.backgroundColor = "#e0e0e0";
+        const savedName = localStorage.getItem("registered_name");
+        const savedPhone = localStorage.getItem("registered_phone");
+        const lastPunchDate = localStorage.getItem("last_punch_date");
+        const lastPunchType = localStorage.getItem("last_punch_type");
+
+        const todayStr = new Date().toDateString();
+
+        if (savedName && savedPhone) {
+            nameInput.value = savedName;
+            phoneInput.value = savedPhone;
+            nameInput.disabled = true;
+            phoneInput.disabled = true;
+        }
+
+        if (lastPunchDate === todayStr && lastPunchType === "IN") {
+            btnIn.disabled = true;
+            btnIn.innerText = "Already Punched IN";
+        }
+    });
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+        document.getElementById('msg').style.display = 'none';
+
+        if (type === 'attendance') {
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.getElementById('attendancePane').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('leavePane').classList.add('active');
+        }
     }
 
-    // 🛑 GREY OUT BUTTON IF ALREADY PUNCHED IN TODAY
-    if (lastPunchDate === todayStr && lastPunchType === "IN") {
-        btnIn.disabled = true;
-        btnIn.innerText = "Already Punched IN";
-    }
-});
-
-function sendData(type) {
-    const nameInput = document.getElementById('name');
-    const phoneInput = document.getElementById('phone');
-    const btnIn = document.getElementById('btn-in');
-    const name = nameInput.value.trim();
-    const phone = phoneInput.value.trim();
-    const msg = document.getElementById('msg');
-
-    if (!name || !phone) {
-        msg.style.color = "red";
-        msg.innerText = "Please enter Name and Phone.";
-        return;
+    function showMessage(text, isError) {
+        const msgDiv = document.getElementById('msg');
+        msgDiv.className = isError ? 'msg-error' : 'msg-success';
+        msgDiv.innerText = text;
+        msgDiv.style.display = 'block';
     }
 
-    // Prevent double clicking while processing
-    if (type === 'IN' && btnIn.disabled) return;
+    function getGPSLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) return reject("Geolocation unsupported by browser.");
+            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+        });
+    }
 
-    msg.style.color = "#333";
-    msg.innerText = "Automating GPS Location Capture...";
+    async function sendAttendance(action) {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        if (!name || !phone) return showMessage("Please specify your name and mobile parameters.", true);
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const data = {
+        showMessage("Extracting coordinate values...", false);
+        try {
+            const pos = await getGPSLocation();
+            const payload = {
+                route: "attendance",
+                action: action,
                 name: name,
                 phone: phone,
-                action: type,
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                deviceId: navigator.userAgent
             };
 
-            fetch('/api/attendance', {
+            const response = await fetch('/api/portal', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(res => {
-                if (res.ok) {
-                    // Lock identity fields
-                    localStorage.setItem("registered_name", name);
-                    localStorage.setItem("registered_phone", phone);
-                    
-                    nameInput.disabled = true;
-                    phoneInput.disabled = true;
-                    nameInput.style.backgroundColor = "#e0e0e0";
-                    phoneInput.style.backgroundColor = "#e0e0e0";
-
-                    // 🔒 SAVE THE PUNCH STATE BASED ON ACTION
-                    const todayStr = new Date().toDateString();
-                    localStorage.setItem("last_punch_date", todayStr);
-                    localStorage.setItem("last_punch_type", type);
-
-                    if (type === "IN") {
-                        btnIn.disabled = true;
-                        btnIn.innerText = "Already Punched IN";
-                    } else if (type === "OUT") {
-                        // If they punch OUT, we reset the IN button state for flexibility, 
-                        // or you can keep it locked depending on company policy.
-                        btnIn.disabled = false;
-                        btnIn.innerText = "Punch IN";
-                    }
-                }
-                return res.json().catch(() => ({}));
-            })
-            .then((result) => {
-                if (result.status === "error") {
-                    msg.style.color = "red";
-                    msg.innerText = result.message;
-                } else {
-                    msg.style.color = "green";
-                    msg.innerText = `Successfully recorded ${type}!`;
-                }
-            })
-            .catch(err => {
-                msg.style.color = "red";
-                msg.innerText = "Error transmitting data.";
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
             });
-        }, (error) => {
-            msg.style.color = "red";
-            msg.innerText = "GPS Error: Please allow location access.";
-        }, { enableHighAccuracy: true });
-    } else {
-        msg.innerText = "GPS not supported.";
-    }
-}
-</script>
+            const res = await response.json();
 
+            if (res.status === 'success') {
+                localStorage.setItem("registered_name", name);
+                localStorage.setItem("registered_phone", phone);
+                localStorage.setItem("last_punch_date", new Date().toDateString());
+                localStorage.setItem("last_punch_type", action);
+                showMessage(res.message, false);
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showMessage(res.message, true);
+            }
+        } catch (err) {
+            showMessage(typeof err === 'string' ? err : "GPS Acquisition Failure. Allow permissions.", true);
+        }
+    }
+
+    async function sendLeave() {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const leaveType = document.getElementById('leaveType').value;
+
+        if (!name || !phone || !startDate || !endDate || !leaveType) {
+            return showMessage("All input form elements are required to file leave.", true);
+        }
+
+        showMessage("Submitting registration logs...", false);
+        try {
+            const payload = { route: "leave", name: name, phone: phone, startDate: startDate, endDate: endDate, leaveType: leaveType };
+            const response = await fetch('/api/portal', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const res = await response.json();
+
+            if (res.status === 'success') {
+                showMessage(res.message, false);
+            } else {
+                showMessage(res.message, true);
+            }
+        } catch (err) {
+            showMessage("Network Exception. Try again.", true);
+        }
+    }
+</script>
 </body>
 </html>

@@ -12,7 +12,7 @@ const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwGrUwVBhcrTfU
 // Your exact geofencing parameters from image_79e6c1.jpg
 const TARGET_LAT = 21.1458;
 const TARGET_LON = 79.0882;
-const ALLOWED_RADIUS_METERS = 100;
+const ALLOWED_RADIUS_METERS = 5000000; // Temporary massive radius for testing
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;

@@ -32,19 +32,12 @@ app.post('/api/portal', async (req, res) => {
         const payload = req.body;
 
         
-        if (payload.route === "attendance") {
-            if (!payload.latitude || !payload.longitude) {
-                return res.status(400).json({ status: "error", message: "Security Violation: GPS parameters mandatory." });
-            }
-
-            const distance = calculateDistance(payload.latitude, payload.longitude, TARGET_LAT, TARGET_LON);
-            if (distance > ALLOWED_RADIUS_METERS) {
-                return res.status(403).json({ 
-                    status: "error", 
-                    message: `Geofence Failure: You are ${distance.toFixed(0)}m outside required workspace limits.` 
-                });
-            }
-        }
+        // GPS location required, but no distance/geofence restriction — just log where they are
+if (payload.route === "attendance") {
+    if (!payload.latitude || !payload.longitude) {
+        return res.status(400).json({ status: "error", message: "GPS location is required to punch in/out." });
+    }
+}
 
         
         const googleResponse = await fetch(GOOGLE_SHEET_URL, {

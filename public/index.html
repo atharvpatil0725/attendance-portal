@@ -114,15 +114,30 @@
                 body: JSON.stringify({ route: "portal_login", empName: name, password: pass })
             })).json();
 
-            if(res.status === "success") {
-                sessionUser = res.data.profile;
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('portalContent').style.display = 'block';
-                document.getElementById('displayProfile').value = `${sessionUser.empName} (${sessionUser.empCode})`;
-                document.getElementById('bal-el').innerText = res.data.balances.el;
-                document.getElementById('bal-cl').innerText = res.data.balances.cl;
-                document.getElementById('bal-ml').innerText = res.data.balances.ml;
-                document.getElementById('msg').style.display = 'none';
+           if (res.status === "success") {
+            sessionUser = res.data.profile;
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('portalContent').style.display = 'block';
+            
+            // 📅 Set today's date as the default and absolute minimum allowed date
+            const todayStr = new Date().toISOString().split('T')[0];
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            
+            if (startDateInput) {
+                startDateInput.value = todayStr; // Defaults to current login date
+                startDateInput.min = todayStr;   // Restricts selection to today or future only
+            }
+            if (endDateInput) {
+                endDateInput.value = todayStr;
+                endDateInput.min = todayStr;     // Restricts end date to today or future only
+            }
+
+            document.getElementById('displayProfile').value = `${sessionUser.empName} (${sessionUser.empCode})`;
+            document.getElementById('bal-el').innerText = res.data.balances.el;
+            document.getElementById('bal-cl').innerText = res.data.balances.cl;
+            document.getElementById('bal-ml').innerText = res.data.balances.ml;
+            document.getElementById('msg').style.display = 'none';
             } else { showMessage(res.message, true); }
         } catch(e) { showMessage("Database server validation error.", true); }
     }

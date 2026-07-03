@@ -31,24 +31,23 @@ app.post('/api/portal', async (req, res) => {
     try {
         const payload = req.body;
 
-        
         // GPS location required, but no distance/geofence restriction — just log where they are
-if (payload.route === "attendance") {
-    if (!payload.latitude || !payload.longitude) {
-        return res.status(400).json({ status: "error", message: "GPS location is required to punch in/out." });
-    }
-}
+        if (payload.route === "attendance") {
+            if (!payload.latitude || !payload.longitude) {
+                return res.status(400).json({ status: "error", message: "GPS location is required to punch in/out." });
+            }
 
-        
-        const googleResponse = await fetch(GOOGLE_SHEET_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await googleResponse.json();
-        res.json(result);
+            const googleResponse = await fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
+            const result = await googleResponse.json();
+            return res.json(result);
+        }
+
+        res.status(400).json({ status: "error", message: "Unsupported route." });
     } catch (error) {
         console.error("Portal infrastructure disconnect:", error);
         res.status(500).json({ status: "error", message: "Database handshake dropped." });

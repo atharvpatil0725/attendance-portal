@@ -144,26 +144,34 @@
         
         const gpsOptions = {
             enableHighAccuracy: true,
-            timeout: 6000,          // Quick timeout so users don't wait forever
-            maximumAge: 30000        // Accept a fresh location cache
+            timeout: 10000,          // Quick timeout so users don't wait forever
+            maximumAge: 0      // Accept a fresh location cache
         };
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            showMessage(`Syncing punch data...`, false);
-            try {
-                const res = await (await fetch('/api/portal', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        route: "attendance", 
-                        action: action, 
-                        name: sessionUser.empName, 
-                        phone: sessionUser.phone || "",
-                        latitude: pos.coords.latitude, 
-                        longitude: pos.coords.longitude
-                    })
-                })).json();
-                
+    const accuracy = pos.coords.accuracy; // in meters
+    
+    if (accuracy > 100) {
+        showMessage(`GPS accuracy too low (±${Math.round(accuracy)}m). Move to open area and try again.`, true);
+        return;
+    }
+    
+    showMessage(`Syncing punch data... (±${Math.round(accuracy)}m accuracy)`, false);
+    try {
+        const res = await (await fetch('/api/portal', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                route: "attendance", 
+                action: action, 
+                name: sessionUser.empName, 
+                phone: sessionUser.phone || "",
+                latitude: pos.coords.latitude, 
+                longitude: pos.coords.longitude,
+                accuracy: accuracy
+            })
+        })).json();
+
                 if(res.status === 'success') {
                     showMessage(`Successfully Punched ${action}!`, false);
                 } else {

@@ -9,10 +9,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ⚠️ MAKE SURE THIS MATCHES YOUR ACTIVE GOOGLE WEB APP URL EXACTLY:
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwGrUwVBhcrTfUGR3xoX8UJ1zatjVwrifmT1jFaWPsoCGvYGqI3NApEo4NIgpnadagz/exec";
 
-// Your exact geofencing parameters from image_79e6c1.jpg
 const TARGET_LAT = 21.1458;
 const TARGET_LON = 79.0882;
-const ALLOWED_RADIUS_METERS = 5000000; // Temporary massive radius for testing
+const ALLOWED_RADIUS_METERS = 150; // Realistic office geofence radius
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
@@ -32,7 +31,7 @@ app.post('/api/portal', async (req, res) => {
     try {
         const payload = req.body;
 
-        // 🛡️ SECURITY GEOCLOCK CHECK: Only run if checking attendance punch parameters
+        
         if (payload.route === "attendance") {
             if (!payload.latitude || !payload.longitude) {
                 return res.status(400).json({ status: "error", message: "Security Violation: GPS parameters mandatory." });
@@ -47,7 +46,7 @@ app.post('/api/portal', async (req, res) => {
             }
         }
 
-        // 🚀 FORWARD THE REQUEST TO GOOGLE SHEETS BACKEND (For OTP, Leaves, or Approved Attendance Data)
+        
         const googleResponse = await fetch(GOOGLE_SHEET_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

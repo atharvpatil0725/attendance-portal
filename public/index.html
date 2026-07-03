@@ -94,6 +94,7 @@
 <script>
     let sessionUser = null;
 
+    // Force date strings to show as MM/DD/YYYY format for UI presentation hints if needed
     function showMessage(text, isError) {
         const msgDiv = document.getElementById('msg');
         msgDiv.className = isError ? 'msg-error' : 'msg-success';
@@ -124,7 +125,7 @@
                 document.getElementById('bal-ml').innerText = res.data.balances.ml;
                 document.getElementById('msg').style.display = 'none';
 
-                // 📅 Lock date pickers to prevent selecting past dates visually
+                // Prevent selecting past dates inside the calendar elements visually
                 const d = new Date();
                 const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 document.getElementById('startDate').min = todayStr;
@@ -151,12 +152,12 @@
         
         const gpsOptions = {
             enableHighAccuracy: true,
-            timeout: 10000,          // Quick timeout so users don't wait forever
-            maximumAge: 0      // Accept a fresh location cache
+            timeout: 10000,
+            maximumAge: 0
         };
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const accuracy = pos.coords.accuracy; // in meters
+            const accuracy = pos.coords.accuracy;
             
             if (accuracy > 500) {
                 showMessage(`GPS accuracy too low (±${Math.round(accuracy)}m). Move to open area and try again.`, true);
@@ -165,7 +166,6 @@
             
             showMessage(`Syncing punch data... (±${Math.round(accuracy)}m accuracy)`, false);
             try {
-                // 🗺️ Get a perfect textual street address directly in the browser
                 let perfectAddress = `Lat: ${pos.coords.latitude}, Lon: ${pos.coords.longitude}`;
                 try {
                     const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
@@ -177,7 +177,6 @@
                     console.error("Address lookup failed, using coordinates fallback", geoErr);
                 }
 
-                // Send the complete payload to your backend
                 const res = await (await fetch('/api/portal', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -186,7 +185,7 @@
                         action: action,
                         name: sessionUser.empName,
                         phone: sessionUser.phone || "",
-                        address: perfectAddress, // <-- Sending the perfect text address here!
+                        address: perfectAddress,
                         latitude: pos.coords.latitude,
                         longitude: pos.coords.longitude,
                         accuracy: accuracy
@@ -211,14 +210,13 @@
     }
 
     async function sendLeave() {
-        // 📅 Calculate local date safely to rule out UTC shift errors
         const d = new Date();
         const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         
         const startVal = document.getElementById('startDate').value;
         const endVal = document.getElementById('endDate').value;
+        const leaveType = document.getElementById('leaveType').value;
 
-        // 🛑 Strict Client-Side Boundary Checks
         if (!startVal || !endVal) {
             showMessage("Please select both Start and End dates.", true);
             return;
@@ -232,16 +230,62 @@
             return;
         }
 
+        // Calculate leave length duration
+        const sDate = new Date(startVal);
+        const eDate = new Date(endVal);
+        const totalRequestedDays = Math.ceil((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Fetch user values directly from current text element states
+        const currentCL = parseInt(document.getElementById('bal-cl').innerText) || 0;
+        const currentEL = parseInt(document.getElementById('bal-el').innerText) || 0;
+        const currentML = parseInt(document.getElementById('bal-ml').innerText) || 0;
+
+        // 📝 Default application status classification
+        let leafRemark = "Valid Request"; 
+
+        // 🔍 Check rules dynamically without terminating or blocking execution loop
+        if (leaveType === "CASUAL LEAVE") {
+            if (totalRequestedDays > 3 || currentCL <= 0 || currentCL < totalRequestedDays) {
+                leafRemark = "Not Applicable";
+            }
+        } else if (leaveType === "EARNED LEAVE") {
+            if (currentEL <= 0 || currentEL < totalRequestedDays) {
+                leafRemark = "Not Applicable";
+            }
+        } else if (leaveType === "MEDICAL LEAVE") {
+            if (currentML <= 0 || currentML < totalRequestedDays) {
+                leafRemark = "Not Applicable";
+            }
+        }
+
         const payload = { 
-            route: "leave", empCode: sessionUser.empCode, empName: sessionUser.empName, phone: sessionUser.phone, 
-            startDate: startVal, endDate: endVal, 
-            leaveType: document.getElementById('leaveType').value 
+            route: "leave", 
+            empCode: sessionUser.empCode, 
+            empName: sessionUser.empName, 
+            phone: sessionUser.phone, 
+            startDate: startVal, 
+            endDate: endVal, 
+            leaveType: leaveType,
+            durationDays: totalRequestedDays,
+            remark: leafRemark // Passes 'Not Applicable' classification directly into your database
         };
         
+        showMessage("Processing data entry parameters...", false);
+
         try {
             const res = await (await fetch('/api/portal', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) })).json();
-            if(res.status === 'success') showMessage(res.message, false);
-            else showMessage(res.message, true);
+            
+            if(res.status === 'success') {
+                if (leafRemark === "Not Applicable") {
+                    // 🔴 Shows up in bright RED styling on their layout screen
+                    showMessage("Application Submitted (Remark: Not Applicable due to policy mismatch)", true);
+                } else {
+                    // 🟢 Shows up in traditional GREEN success formatting
+                    showMessage("Application submitted successfully! Pending admin approval.", false);
+                }
+            } else {
+                showMessage(res.message, true);
+            }
         } catch(err) {
             showMessage("Failed to connect to application database.", true);
         }

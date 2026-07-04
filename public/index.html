@@ -38,8 +38,8 @@
     <!-- CREDENTIAL ENTRY GATES -->
     <div id="loginSection">
         <div class="form-group">
-            <label>Registered Full Name</label>
-            <input type="text" id="loginName" placeholder="" required>
+            <label>Employee Code</label>
+            <input type="text" id="loginCode" placeholder="e.g., R16" required>
         </div>
         <div class="form-group">
             <label>Password (Mobile Number)</label>
@@ -102,17 +102,17 @@
     }
 
     async function submitPortalLogin() {
-        const name = document.getElementById('loginName').value.trim();
+        const code = document.getElementById('loginCode').value.trim();
         const pass = document.getElementById('loginPassword').value.trim();
         
-        if(!name || !pass) return showMessage("Please enter both Name and Password.", true);
+        if(!code || !pass) return showMessage("Please enter both Employee Code and Password.", true);
         showMessage("Verifying security parameters...", false);
         
         try {
             const res = await (await fetch('/api/portal', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ route: "portal_login", empName: name, password: pass })
+               body: JSON.stringify({ route: "portal_login", empCode: code, password: pass })
             })).json();
 
             if(res.status === "success") {

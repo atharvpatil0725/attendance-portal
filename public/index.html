@@ -120,9 +120,9 @@
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('portalContent').style.display = 'block';
                 document.getElementById('displayProfile').value = `${sessionUser.empName} (${sessionUser.empCode})`;
-                document.getElementById('bal-el').innerText = res.data.balances.el;
-                document.getElementById('bal-cl').innerText = res.data.balances.cl;
-                document.getElementById('bal-ml').innerText = res.data.balances.ml;
+                document.getElementById('bal-el').innerText = res.data.balances.EL_BAL || 0;
+                document.getElementById('bal-cl').innerText = res.data.balances.CL_BAL || 0;
+                document.getElementById('bal-ml').innerText = res.data.balances.ML_BAL || 0;
                 document.getElementById('msg').style.display = 'none';
 
                 // Prevent selecting past dates inside the calendar elements visually

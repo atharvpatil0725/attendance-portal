@@ -41,9 +41,11 @@
             <label>Employee Code</label>
             <input type="text" id="loginCode" placeholder="EMP_CODE" required>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
             <label>Password (Mobile Number)</label>
             <input type="password" id="loginPassword" placeholder="10-digit mobile number" required>
+            <!-- Toggle Button for visibility -->
+            <span id="togglePassword" style="position: absolute; right: 10px; top: 35px; cursor: pointer; font-size: 18px;">👁️</span>
         </div>
         <button class="btn-primary" onclick="submitPortalLogin()">Log In Securely</button>
     </div>
@@ -94,7 +96,14 @@
 <script>
     let sessionUser = null;
 
-    // Force date strings to show as MM/DD/YYYY format for UI presentation hints if needed
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        const passwordInput = document.getElementById('loginPassword');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
     function showMessage(text, isError) {
         const msgDiv = document.getElementById('msg');
         msgDiv.className = isError ? 'msg-error' : 'msg-success';
@@ -125,7 +134,6 @@
                 document.getElementById('bal-ml').innerText = res.data.balances.ML_BAL || 0;
                 document.getElementById('msg').style.display = 'none';
 
-                // Prevent selecting past dates inside the calendar elements visually
                 const d = new Date();
                 const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 document.getElementById('startDate').min = todayStr;
@@ -150,32 +158,22 @@
     async function sendAttendance(action) {
         showMessage("Getting GPS location...", false);
         
-        const gpsOptions = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        };
+        const gpsOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const accuracy = pos.coords.accuracy;
-            
             if (accuracy > 500) {
                 showMessage(`GPS accuracy too low (±${Math.round(accuracy)}m). Move to open area and try again.`, true);
                 return;
             }
-            
             showMessage(`Syncing punch data... (±${Math.round(accuracy)}m accuracy)`, false);
             try {
                 let perfectAddress = `Lat: ${pos.coords.latitude}, Lon: ${pos.coords.longitude}`;
                 try {
                     const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
                     const geoData = await geoRes.json();
-                    if (geoData && geoData.display_name) {
-                        perfectAddress = geoData.display_name;
-                    }
-                } catch (geoErr) {
-                    console.error("Address lookup failed, using coordinates fallback", geoErr);
-                }
+                    if (geoData && geoData.display_name) perfectAddress = geoData.display_name;
+                } catch (geoErr) { console.error("Address lookup failed", geoErr); }
 
                 const res = await (await fetch('/api/portal', {
                     method: 'POST',
@@ -192,103 +190,48 @@
                     })
                 })).json();
 
-                if(res.status === 'success') {
-                    showMessage(`Successfully Punched ${action}!`, false);
-                } else {
-                    showMessage(res.message, true);
-                }
-            } catch (err) {
-                showMessage("Server connection failed.", true);
-            }
+                if(res.status === 'success') showMessage(`Successfully Punched ${action}!`, false);
+                else showMessage(res.message, true);
+            } catch (err) { showMessage("Server connection failed.", true); }
         }, (error) => {
-            if(error.code === error.TIMEOUT) {
-                showMessage("GPS Timeout: Please verify location is toggled ON or try again.", true);
-            } else {
-                showMessage("GPS access denied or unavailable.", true);
-            }
+            if(error.code === error.TIMEOUT) showMessage("GPS Timeout: Please verify location is ON.", true);
+            else showMessage("GPS access denied or unavailable.", true);
         }, gpsOptions);
     }
 
     async function sendLeave() {
         const d = new Date();
         const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        
         const startVal = document.getElementById('startDate').value;
         const endVal = document.getElementById('endDate').value;
         const leaveType = document.getElementById('leaveType').value;
 
-        if (!startVal || !endVal) {
-            showMessage("Please select both Start and End dates.", true);
-            return;
-        }
-        if (startVal < todayStr) {
-            showMessage("Access Denied: You cannot apply for a leave on a previous date.", true);
-            return;
-        }
-        if (endVal < startVal) {
-            showMessage("Invalid Range: End date cannot be before the start date.", true);
-            return;
-        }
+        if (!startVal || !endVal) { showMessage("Please select both Start and End dates.", true); return; }
+        if (startVal < todayStr) { showMessage("Access Denied: Cannot apply for previous dates.", true); return; }
+        if (endVal < startVal) { showMessage("Invalid Range: End date before start date.", true); return; }
 
-        // Calculate leave length duration
         const sDate = new Date(startVal);
         const eDate = new Date(endVal);
         const totalRequestedDays = Math.ceil((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
-
-        // Fetch user values directly from current text element states
         const currentCL = parseInt(document.getElementById('bal-cl').innerText) || 0;
         const currentEL = parseInt(document.getElementById('bal-el').innerText) || 0;
         const currentML = parseInt(document.getElementById('bal-ml').innerText) || 0;
 
-        // 📝 Default application status classification
         let leafRemark = "Valid Request"; 
+        if (leaveType === "CASUAL LEAVE" && (totalRequestedDays > 3 || currentCL < totalRequestedDays)) leafRemark = "Not Applicable";
+        else if (leaveType === "EARNED LEAVE" && currentEL < totalRequestedDays) leafRemark = "Not Applicable";
+        else if (leaveType === "MEDICAL LEAVE" && currentML < totalRequestedDays) leafRemark = "Not Applicable";
 
-        // 🔍 Check rules dynamically without terminating or blocking execution loop
-        if (leaveType === "CASUAL LEAVE") {
-            if (totalRequestedDays > 3 || currentCL <= 0 || currentCL < totalRequestedDays) {
-                leafRemark = "Not Applicable";
-            }
-        } else if (leaveType === "EARNED LEAVE") {
-            if (currentEL <= 0 || currentEL < totalRequestedDays) {
-                leafRemark = "Not Applicable";
-            }
-        } else if (leaveType === "MEDICAL LEAVE") {
-            if (currentML <= 0 || currentML < totalRequestedDays) {
-                leafRemark = "Not Applicable";
-            }
-        }
-
-        const payload = { 
-            route: "leave", 
-            empCode: sessionUser.empCode, 
-            empName: sessionUser.empName, 
-            phone: sessionUser.phone, 
-            startDate: startVal, 
-            endDate: endVal, 
-            leaveType: leaveType,
-            durationDays: totalRequestedDays,
-            remark: leafRemark // Passes 'Not Applicable' classification directly into your database
-        };
+        const payload = { route: "leave", empCode: sessionUser.empCode, empName: sessionUser.empName, phone: sessionUser.phone, startDate: startVal, endDate: endVal, leaveType: leaveType, durationDays: totalRequestedDays, remark: leafRemark };
         
         showMessage("Processing data entry parameters...", false);
-
         try {
             const res = await (await fetch('/api/portal', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) })).json();
-            
             if(res.status === 'success') {
-                if (leafRemark === "Not Applicable") {
-                    // 🔴 Shows up in bright RED styling on their layout screen
-                    showMessage("Application Submitted (Remark: Not Applicable due to policy mismatch)", true);
-                } else {
-                    // 🟢 Shows up in traditional GREEN success formatting
-                    showMessage("Application submitted successfully! Pending admin approval.", false);
-                }
-            } else {
-                showMessage(res.message, true);
-            }
-        } catch(err) {
-            showMessage("Failed to connect to application database.", true);
-        }
+                if (leafRemark === "Not Applicable") showMessage("Application Submitted (Remark: Not Applicable due to policy mismatch)", true);
+                else showMessage("Application submitted successfully! Pending admin approval.", false);
+            } else showMessage(res.message, true);
+        } catch(err) { showMessage("Failed to connect to application database.", true); }
     }
 </script>
 </body>

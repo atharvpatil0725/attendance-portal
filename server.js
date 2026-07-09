@@ -46,6 +46,40 @@ app.post('/api/portal', async (req, res) => {
     }
 });
 
+// Convenience proxy endpoints expected by the frontend
+app.post('/api/login', async (req, res) => {
+    try {
+        const payload = { route: 'portal_login', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Login Proxy Error:", error);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
+});
+
+app.post('/api/attendance', async (req, res) => {
+    try {
+        const payload = { route: 'attendance', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Attendance Proxy Error:", error);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
+});
+
+app.post('/api/leave', async (req, res) => {
+    try {
+        const payload = { route: 'leave', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Leave Proxy Error:", error);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running smoothly on http://localhost:${PORT}`);
 });

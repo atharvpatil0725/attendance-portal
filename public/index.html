@@ -9,10 +9,59 @@
     <style>
         body { font-family: 'Roboto', sans-serif; }
         .tab-active { border-bottom-width: 3px; border-color: #2563eb; color: #2563eb; font-weight: 500; }
+
+        /* Profile Panel */
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 320px;
+            max-width: 90vw;
+            background: white;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+            z-index: 100;
+            transform: translateX(100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .profile-panel.open { transform: translateX(0); }
+
+        .profile-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.25);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .profile-backdrop.open { opacity: 1; pointer-events: auto; }
+
+        .profile-section { border-bottom: 1px solid #f3f4f6; padding: 14px 0; }
+        .profile-section:last-child { border-bottom: none; }
+        .profile-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            padding: 2px 0;
+        }
+        .profile-row .lbl { color: #6b7280; }
+        .profile-row .val { font-weight: 600; color: #111827; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
 
+    <!-- LOGIN SECTION -->
     <div id="loginSection" class="flex flex-col items-center justify-center min-h-screen px-4">
         <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md border border-gray-100">
             <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">Employee Portal</h1>
@@ -23,11 +72,14 @@
             <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Employee Code</label>
-                    <input type="text" id="empCodeInput" required placeholder="e.g. EMP_R16" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+                    <input type="text" id="empCodeInput" required placeholder="Enter employee code" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Password (Registered Mobile)</label>
-                    <input type="password" id="passwordInput" required placeholder="••••••••••" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="passwordInput" required placeholder="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="button" onclick="togglePasswordVisibility()" id="togglePasswordBtn" class="absolute right-3 top-2.5 text-xs font-semibold text-gray-400 hover:text-blue-600 cursor-pointer uppercase tracking-wider">Show</button>
+                    </div>
                 </div>
                 <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-sm flex justify-center items-center">
                     Secure Login
@@ -36,6 +88,7 @@
         </div>
     </div>
 
+    <!-- PORTAL DASHBOARD -->
     <div id="portalDashboard" class="hidden min-h-screen flex flex-col">
         <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-xs">
             <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -46,14 +99,23 @@
                         <p class="text-xs text-gray-500" id="headerUserCode">EMP_CODE</p>
                     </div>
                 </div>
-                <button onclick="handleLogout()" class="text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition duration-150">
-                    Logout Portal
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- Profile Toggle Button -->
+                    <button onclick="toggleProfilePanel()" title="View Profile"
+                        class="flex items-center gap-2 text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition duration-150">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        My Profile
+                    </button>
+                    <button onclick="handleLogout()" class="text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition duration-150">
+                        Logout Portal
+                    </button>
+                </div>
             </div>
         </header>
 
         <main class="max-w-6xl w-full mx-auto p-4 flex-1 space-y-6">
             
+            <!-- LEAVE BALANCE CARDS -->
             <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-white p-5 rounded-xl shadow-xs border border-blue-100 flex flex-col justify-between relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-16 w-16 bg-blue-50 rounded-bl-full -z-0 opacity-60"></div>
@@ -64,7 +126,6 @@
                     </div>
                     <div class="text-[11px] text-gray-400 mt-3 border-t border-gray-100 pt-2" id="elDynamicProjection">Policy standard asset</div>
                 </div>
-
                 <div class="bg-white p-5 rounded-xl shadow-xs border border-amber-100 flex flex-col justify-between relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-16 w-16 bg-amber-50 rounded-bl-full -z-0 opacity-60"></div>
                     <span class="text-xs font-bold text-amber-600 tracking-wider uppercase mb-1 z-10">Casual Leave (CL)</span>
@@ -74,7 +135,6 @@
                     </div>
                     <div class="text-[11px] text-gray-400 mt-3 border-t border-gray-100 pt-2" id="clDynamicProjection">Refreshes dynamically</div>
                 </div>
-
                 <div class="bg-white p-5 rounded-xl shadow-xs border border-emerald-100 flex flex-col justify-between relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-16 w-16 bg-emerald-50 rounded-bl-full -z-0 opacity-60"></div>
                     <span class="text-xs font-bold text-emerald-600 tracking-wider uppercase mb-1 z-10">Medical Leave (ML)</span>
@@ -86,6 +146,7 @@
                 </div>
             </section>
 
+            <!-- MAIN TABS -->
             <section class="bg-white rounded-xl shadow-xs border border-gray-200">
                 <div class="flex border-b border-gray-200 overflow-x-auto">
                     <button onclick="switchTab('attendancePane')" id="tab-attendancePane" class="tab-button px-6 py-3.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap cursor-pointer transition">
@@ -100,6 +161,7 @@
                 </div>
 
                 <div class="p-6">
+                    <!-- ATTENDANCE PANE -->
                     <div id="attendancePane" class="tab-content hidden space-y-4">
                         <h3 class="text-base font-bold text-gray-900 mb-2">GPS-Verified Geo-Fencing Terminals</h3>
                         <div id="attendanceAlert" class="hidden p-3 text-sm rounded-lg border"></div>
@@ -113,6 +175,7 @@
                         </div>
                     </div>
 
+                    <!-- LEAVE PANE -->
                     <div id="leavePane" class="tab-content hidden space-y-6">
                         <div class="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-start gap-2">
                             <span class="text-base">⚠️</span>
@@ -121,9 +184,7 @@
                                 Leave requests that cause negative balances or targets containing exhausted categories are strictly monitored. Rejections lock seamlessly in audit rows.
                             </div>
                         </div>
-
                         <div id="leaveAlert" class="hidden p-3 text-sm rounded-lg border"></div>
-
                         <form id="leaveForm" onsubmit="handleLeaveSubmission(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Leave Classification</label>
@@ -155,6 +216,7 @@
                         </form>
                     </div>
 
+                    <!-- SALARY PANE -->
                     <div id="salaryPane" class="tab-content hidden space-y-4">
                         <h3 class="text-base font-bold text-gray-900 mb-1">Your Digital Pay Documents</h3>
                         <p class="text-xs text-gray-500 mb-4">Direct secure links pulling straight from corporate drive frameworks based on your unique ID.</p>
@@ -166,53 +228,179 @@
         </main>
     </div>
 
+    <!-- ========== PROFILE SLIDE PANEL ========== -->
+    <div class="profile-backdrop" id="profileBackdrop" onclick="closeProfilePanel()"></div>
+
+    <div class="profile-panel" id="profilePanel">
+        <!-- Panel Header -->
+        <div class="flex justify-between items-center px-5 py-4 border-b border-gray-100">
+            <h2 class="text-sm font-bold text-gray-900 tracking-wide uppercase">My Profile</h2>
+            <button onclick="closeProfilePanel()" class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg w-7 h-7 flex items-center justify-center transition text-lg leading-none">✕</button>
+        </div>
+
+        <!-- Panel Body -->
+        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-1">
+
+            <!-- Avatar + Name -->
+            <div class="flex items-center gap-3 mb-4">
+                <div class="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-base shrink-0" id="panelAvatar">??</div>
+                <div>
+                    <p class="font-bold text-gray-900 text-sm" id="panelName">—</p>
+                    <p class="text-xs text-gray-500" id="panelCode">—</p>
+                    <p class="text-xs text-blue-600 font-medium" id="panelDesignation">—</p>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="profile-section">
+                <div class="profile-section-title">📇 Basic Info</div>
+                <div class="profile-row"><span class="lbl">Department</span><span class="val" id="panelDept">—</span></div>
+                <div class="profile-row"><span class="lbl">Joining Date</span><span class="val" id="panelJoining">—</span></div>
+            </div>
+
+            <!-- Contact -->
+            <div class="profile-section">
+                <div class="profile-section-title">📱 Contact</div>
+                <div class="profile-row"><span class="lbl">Phone</span><span class="val" id="panelPhone">—</span></div>
+                <div class="profile-row"><span class="lbl">Email</span><span class="val" id="panelEmail" style="font-size:11px;">—</span></div>
+            </div>
+
+            <!-- Bank Details -->
+            <div class="profile-section">
+                <div class="profile-section-title">🏦 Bank Details</div>
+                <div class="profile-row"><span class="lbl">Bank</span><span class="val" id="panelBank">—</span></div>
+                <div class="profile-row"><span class="lbl">A/C No.</span><span class="val" id="panelAccNo">—</span></div>
+                <div class="profile-row"><span class="lbl">IFSC</span><span class="val" id="panelIfsc">—</span></div>
+            </div>
+
+            <!-- Leave Balances -->
+            <div class="profile-section">
+                <div class="profile-section-title">📊 Leave Balances</div>
+                <div class="flex gap-2 mt-1">
+                    <div class="flex-1 text-center bg-blue-50 rounded-lg py-2">
+                        <span class="block text-lg font-bold text-blue-700" id="panelEL">0</span>
+                        <span class="text-[10px] text-blue-500 font-semibold">EL</span>
+                    </div>
+                    <div class="flex-1 text-center bg-amber-50 rounded-lg py-2">
+                        <span class="block text-lg font-bold text-amber-600" id="panelCL">0</span>
+                        <span class="text-[10px] text-amber-500 font-semibold">CL</span>
+                    </div>
+                    <div class="flex-1 text-center bg-emerald-50 rounded-lg py-2">
+                        <span class="block text-lg font-bold text-emerald-600" id="panelML">0</span>
+                        <span class="text-[10px] text-emerald-500 font-semibold">ML</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payslips Quick Access -->
+            <div class="profile-section">
+                <div class="profile-section-title">📄 Quick Payslip Access</div>
+                <div id="panelPayslipList" class="space-y-2 mt-1">
+                    <p class="text-xs text-gray-400">Switch to Salary Slips tab to load documents.</p>
+                </div>
+                <button onclick="closeProfilePanel(); switchTab('salaryPane');" class="mt-3 w-full text-xs text-blue-600 border border-blue-200 hover:bg-blue-50 py-1.5 rounded-lg transition font-medium">
+                    View All Salary Slips →
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Panel Footer -->
+        <div class="px-5 py-3 border-t border-gray-100">
+            <p class="text-[10px] text-gray-400 text-center">View-only · Contact HR to update your details</p>
+        </div>
+    </div>
+    <!-- ========== END PROFILE PANEL ========== -->
+
     <script>
-        // 🌐 Paste your production Google Web App URL link endpoint right here
         const WEB_APP_URL = "YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL_HERE";
 
-        // Global User Memory Cache Engine
         let currentUserProfile = null;
         let currentBalances = { EL_BAL: 0, CL_BAL: 0, ML_BAL: 0 };
 
-        // 🟢 INITIALIZATION & UTILITIES
         window.addEventListener('DOMContentLoaded', () => {
-            // Force strict calendar limits (Prevent previous date parameters selecting historical dates)
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('startDateInput').min = todayStr;
             document.getElementById('endDateInput').min = todayStr;
         });
 
-        function switchTab(targetPaneId) {
-            document.querySelectorAll('.tab-content').forEach(pane => pane.classList.add('hidden'));
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('tab-active'));
-            
-            document.getElementById(targetPaneId).classList.remove('hidden');
-            document.getElementById('tab-' + targetPaneId).classList.add('tab-active');
-
-            if (targetPaneId === 'salaryPane') {
-                fetchSalarySlipsPipeline();
+        // ── PROFILE PANEL ──────────────────────────────────────────
+        function toggleProfilePanel() {
+            const panel = document.getElementById('profilePanel');
+            if (panel.classList.contains('open')) {
+                closeProfilePanel();
+            } else {
+                openProfilePanel();
             }
         }
 
-        // 🔄 STATE REPAINT ENGINE (REFRESHES PORTAL BALANCE CARDS INSTANTLY)
+        function openProfilePanel() {
+            populateProfilePanel();
+            document.getElementById('profilePanel').classList.add('open');
+            document.getElementById('profileBackdrop').classList.add('open');
+        }
+
+        function closeProfilePanel() {
+            document.getElementById('profilePanel').classList.remove('open');
+            document.getElementById('profileBackdrop').classList.remove('open');
+        }
+
+        function populateProfilePanel() {
+            if (!currentUserProfile) return;
+
+            const initials = currentUserProfile.empName.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('panelAvatar').innerText = initials;
+            document.getElementById('panelName').innerText = currentUserProfile.empName || '—';
+            document.getElementById('panelCode').innerText = currentUserProfile.empCode || '—';
+            document.getElementById('panelDesignation').innerText = currentUserProfile.designation || '—';
+            document.getElementById('panelDept').innerText = currentUserProfile.department || '—';
+            document.getElementById('panelJoining').innerText = currentUserProfile.joiningDate || '—';
+            document.getElementById('panelPhone').innerText = currentUserProfile.phone || '—';
+            document.getElementById('panelEmail').innerText = currentUserProfile.email || '—';
+            document.getElementById('panelBank').innerText = currentUserProfile.bankName || '—';
+
+            // Mask account number - show last 4 digits only
+            const accNo = currentUserProfile.accountNumber || '';
+            document.getElementById('panelAccNo').innerText = accNo ? '••••' + accNo.slice(-4) : '—';
+            document.getElementById('panelIfsc').innerText = currentUserProfile.ifsc || '—';
+
+            // Live balances from memory
+            document.getElementById('panelEL').innerText = currentBalances.EL_BAL;
+            document.getElementById('panelCL').innerText = currentBalances.CL_BAL;
+            document.getElementById('panelML').innerText = currentBalances.ML_BAL;
+        }
+
+        // ── TAB SWITCHER ───────────────────────────────────────────
+        function switchTab(targetPaneId) {
+            document.querySelectorAll('.tab-content').forEach(pane => pane.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('tab-active'));
+            document.getElementById(targetPaneId).classList.remove('hidden');
+            document.getElementById('tab-' + targetPaneId).classList.add('tab-active');
+            if (targetPaneId === 'salaryPane') fetchSalarySlipsPipeline();
+        }
+
         function repaintBalanceWidgets() {
             document.getElementById('elBalanceDisplay').innerText = currentBalances.EL_BAL;
             document.getElementById('clBalanceDisplay').innerText = currentBalances.CL_BAL;
             document.getElementById('mlBalanceDisplay').innerText = currentBalances.ML_BAL;
-            
-            // Clear calculation metrics strings
             document.getElementById('elDynamicProjection').innerText = "Policy standard asset";
             document.getElementById('clDynamicProjection').innerText = "Refreshes dynamically";
             document.getElementById('mlDynamicProjection').innerText = "Medical allowance status";
             runLivePolicyDeductionProjection();
         }
 
-        // 🔒 AUTH MODULE PORTAL ROUTER
+        // ── AUTH ───────────────────────────────────────────────────
+        function togglePasswordVisibility() {
+            const input = document.getElementById('passwordInput');
+            const btn = document.getElementById('togglePasswordBtn');
+            if (input.type === 'password') { input.type = 'text'; btn.innerText = 'Hide'; }
+            else { input.type = 'password'; btn.innerText = 'Show'; }
+        }
+
         async function handleLogin(e) {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
             const alertBox = document.getElementById('loginAlert');
-            
             btn.disabled = true;
             btn.innerText = "Authenticating Access...";
             alertBox.classList.add('hidden');
@@ -224,28 +412,23 @@
             };
 
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
+                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
 
                 if (result.status === "success") {
                     currentUserProfile = result.data.profile;
-                    // Dynamically structural alignment matching keys returned from sheet rows safely
                     currentBalances = {
                         EL_BAL: Number(result.data.balances.EL_BAL),
                         CL_BAL: Number(result.data.balances.CL_BAL),
                         ML_BAL: Number(result.data.balances.ML_BAL)
                     };
 
-                    // Populate layout parameters
+                    const initials = currentUserProfile.empName.split(' ').map(n => n[0]).join('').toUpperCase();
                     document.getElementById('headerUserName').innerText = currentUserProfile.empName;
                     document.getElementById('headerUserCode').innerText = currentUserProfile.empCode;
-                    document.getElementById('userAvatar').innerText = currentUserProfile.empName.split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('userAvatar').innerText = initials;
 
                     repaintBalanceWidgets();
-                    
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('portalDashboard').classList.remove('hidden');
                     switchTab('attendancePane');
@@ -254,7 +437,7 @@
                     alertBox.classList.remove('hidden');
                 }
             } catch (err) {
-                alertBox.innerText = "Connection Dropped: Check script deployment endpoints. Err: " + err.toString();
+                alertBox.innerText = "Connection Dropped: " + err.toString();
                 alertBox.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
@@ -265,13 +448,14 @@
         function handleLogout() {
             currentUserProfile = null;
             currentBalances = { EL_BAL: 0, CL_BAL: 0, ML_BAL: 0 };
+            closeProfilePanel();
             document.getElementById('loginForm').reset();
             document.getElementById('leaveForm').reset();
-            document.getElementById('portalDashboard').add('hidden');
+            document.getElementById('portalDashboard').classList.add('hidden');
             document.getElementById('loginSection').classList.remove('hidden');
         }
 
-        // ⏱️ GPS TRACKING PUNCH ROUTER
+        // ── GPS PUNCH ──────────────────────────────────────────────
         function triggerPunch(actionType) {
             const alertBox = document.getElementById('attendanceAlert');
             alertBox.className = "p-3 text-sm rounded-lg border bg-blue-50 text-blue-700 border-blue-200";
@@ -294,11 +478,9 @@
                     longitude: position.coords.longitude,
                     accuracy: position.coords.accuracy
                 };
-
                 try {
                     const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                     const result = await response.json();
-                    
                     if (result.status === "success") {
                         alertBox.className = "p-3 text-sm rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200";
                         alertBox.innerText = `Success: Verified ${actionType} Punch recorded.`;
@@ -310,25 +492,22 @@
                     alertBox.className = "p-3 text-sm rounded-lg border bg-red-50 text-red-700 border-red-200";
                     alertBox.innerText = "Network transmission crash: " + err.toString();
                 }
-            }, (error) => {
+            }, () => {
                 alertBox.className = "p-3 text-sm rounded-lg border bg-red-50 text-red-700 border-red-200";
                 alertBox.innerText = "Satellite fix timeout. Verify tracking system permissions.";
             }, { enableHighAccuracy: true, timeout: 10000 });
         }
 
-        // ✈️ REAL-TIME DYNAMIC LEAVE CALCULATION ENGINE
+        // ── LEAVE LOGIC ────────────────────────────────────────────
         function runLivePolicyDeductionProjection() {
             const startVal = document.getElementById('startDateInput').value;
             const endVal = document.getElementById('endDateInput').value;
             const typeSelected = document.getElementById('leaveTypeSelect').value;
             const spanIndicator = document.getElementById('liveSpanIndicator');
-            
             if (!startVal || !endVal) return;
 
-            const start = new Date(startVal);
-            const end = new Date(endVal);
-            start.setHours(0,0,0,0);
-            end.setHours(0,0,0,0);
+            const start = new Date(startVal); const end = new Date(endVal);
+            start.setHours(0,0,0,0); end.setHours(0,0,0,0);
 
             if (end < start) {
                 spanIndicator.className = "px-4 py-2 border border-dashed border-red-300 bg-red-50 text-sm text-red-700 font-medium h-10 flex items-center rounded-lg";
@@ -340,9 +519,7 @@
             spanIndicator.className = "px-4 py-2 border border-dashed border-blue-300 bg-blue-50 text-sm text-blue-700 font-medium h-10 flex items-center rounded-lg";
             spanIndicator.innerText = `${daysRequested} Working Day(s) Selected`;
 
-            // Evaluate current category variable target index
-            let activeBalanceKey = "CL_BAL";
-            let displayTargetId = "clDynamicProjection";
+            let activeBalanceKey = "CL_BAL"; let displayTargetId = "clDynamicProjection";
             if (typeSelected === "EARNED LEAVE") { activeBalanceKey = "EL_BAL"; displayTargetId = "elDynamicProjection"; }
             if (typeSelected === "MEDICAL LEAVE") { activeBalanceKey = "ML_BAL"; displayTargetId = "mlDynamicProjection"; }
 
@@ -358,26 +535,19 @@
             }
         }
 
-        // ✈️ TRANSMIT & INSTANT REFRESH CONTROLLER
         async function handleLeaveSubmission(e) {
             e.preventDefault();
             const btn = document.getElementById('leaveSubmitBtn');
             const alertBox = document.getElementById('leaveAlert');
-            
             const startVal = document.getElementById('startDateInput').value;
             const endVal = document.getElementById('endDateInput').value;
             const typeSelected = document.getElementById('leaveTypeSelect').value;
-
             alertBox.classList.add('hidden');
-            
-            const start = new Date(startVal);
-            const end = new Date(endVal);
-            start.setHours(0,0,0,0);
-            end.setHours(0,0,0,0);
-            
+
+            const start = new Date(startVal); const end = new Date(endVal);
+            start.setHours(0,0,0,0); end.setHours(0,0,0,0);
             const daysRequested = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1;
 
-            // Determine categorization paths
             let categoryKey = "CL_BAL";
             if (typeSelected === "EARNED LEAVE") categoryKey = "EL_BAL";
             if (typeSelected === "MEDICAL LEAVE") categoryKey = "ML_BAL";
@@ -386,14 +556,8 @@
             let subRemark = "Pending Approval";
             let localApprovalSucceeded = true;
 
-            // Strict policy calculation layer execution
-            if (availableBalance <= 0) {
-                subRemark = "Automatically Rejected: Zero Balance Available";
-                localApprovalSucceeded = false;
-            } else if (daysRequested > availableBalance) {
-                subRemark = `Automatically Rejected: Request (${daysRequested} Days) exceeds allocation balance`;
-                localApprovalSucceeded = false;
-            }
+            if (availableBalance <= 0) { subRemark = "Automatically Rejected: Zero Balance Available"; localApprovalSucceeded = false; }
+            else if (daysRequested > availableBalance) { subRemark = `Automatically Rejected: Request (${daysRequested} Days) exceeds allocation balance`; localApprovalSucceeded = false; }
 
             btn.disabled = true;
             btn.innerText = "Transmitting to Corporate Database Pipeline...";
@@ -415,11 +579,8 @@
 
                 if (result.status === "success") {
                     if (localApprovalSucceeded) {
-                        // ⚡ DYNAMIC REAL-TIME UPDATE HAPPENS HERE
-                        // Immediately deduct values locally inside active memory context state variables
                         currentBalances[categoryKey] = availableBalance - daysRequested;
-                        repaintBalanceWidgets(); // Instantly update view without reloading page
-
+                        repaintBalanceWidgets();
                         alertBox.className = "p-3 text-sm rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200";
                         alertBox.innerText = `🎉 Leave Request processed successfully! Balance updated immediately. Deducted: ${daysRequested} Days.`;
                     } else {
@@ -443,25 +604,26 @@
             }
         }
 
-        // 📄 PAYROLL FILE MANAGER DOWNLOAD SYSTEM
+        // ── SALARY SLIPS ───────────────────────────────────────────
         async function fetchSalarySlipsPipeline() {
             const container = document.getElementById('slipsContainer');
             const loader = document.getElementById('salaryLoader');
-            
             container.innerHTML = "";
             loader.classList.remove('hidden');
 
-            const payload = {
-                route: "get_payslips",
-                empCode: currentUserProfile.empCode
-            };
+            const payload = { route: "get_payslips", empCode: currentUserProfile.empCode };
 
             try {
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
 
                 if (result.status === "success" && result.data && result.data.files && result.data.files.length > 0) {
+                    // Also populate profile panel quick access
+                    const panelList = document.getElementById('panelPayslipList');
+                    panelList.innerHTML = '';
+
                     result.data.files.forEach(file => {
+                        // Main salary tab card
                         const card = document.createElement('div');
                         card.className = "bg-white p-4 border border-gray-200 rounded-lg shadow-2xs flex justify-between items-center hover:border-blue-300 transition";
                         card.innerHTML = `
@@ -469,16 +631,26 @@
                                 <span class="text-xl shrink-0">📄</span>
                                 <span class="text-xs font-medium text-gray-700 truncate block">${file.name}</span>
                             </div>
-                            <a href="${file.url}" target="_blank" rel="noopener noreferrer" class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded font-medium transition shrink-0">
-                                Download
+                            <a href="${file.url}" target="_blank" rel="noopener noreferrer" download
+                               class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded font-medium transition shrink-0">
+                                ⬇ Download
                             </a>
                         `;
                         container.appendChild(card);
+
+                        // Profile panel quick access row
+                        const pRow = document.createElement('div');
+                        pRow.className = "flex justify-between items-center text-xs py-1";
+                        pRow.innerHTML = `
+                            <span class="text-gray-600 truncate">${file.name}</span>
+                            <a href="${file.url}" target="_blank" download class="text-blue-600 font-semibold shrink-0 ml-2">⬇</a>
+                        `;
+                        panelList.appendChild(pRow);
                     });
                 } else {
                     container.innerHTML = `
                         <div class="sm:col-span-2 p-6 text-center border border-dashed border-gray-200 rounded-xl bg-gray-50 text-xs text-gray-400">
-                            No matching salary slip document assets found inside the directory for database code "${currentUserProfile.empCode}".
+                            No matching salary slip document assets found for employee code "${currentUserProfile.empCode}".
                         </div>
                     `;
                 }

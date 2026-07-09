@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -10,9 +10,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ⚠️ YOUR ACTIVE GOOGLE WEB APP URL:
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwGrUwVBhcrTfUGR3xoX8UJ1zatjVwrifmT1jFaWPsoCGvYGqI3NApEo4NIgpnadagz/exec";
 
+// Geo-fencing utilities (Kept intact for your reference/future use)
 const TARGET_LAT = 21.1458;
 const TARGET_LON = 79.0882;
-const ALLOWED_RADIUS_METERS = 150; // Realistic office geofence radius
+const ALLOWED_RADIUS_METERS = 150; 
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
@@ -27,49 +28,53 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// Generic forwarder to Google Apps Script
-async function forwardToSheet(route, body, res) {
+// ─── 1. LOGIN PROXY ENDPOINT ──────────────────────────────────────
+app.post('/api/login', async (req, res) => {
     try {
-        const response = await axios.post(GOOGLE_SHEET_URL, { ...body, route });
+        // Injects the route token your Google Script expects
+        const payload = { route: 'portal_login', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
         res.json(response.data);
     } catch (error) {
-        console.error("Backend Proxy Error:", error.message);
+        console.error("Login Proxy Error:", error);
         res.status(500).json({ status: 'error', message: 'Internal Server Error' });
     }
-}
-
-// 🔑 Login
-app.post('/api/login', async (req, res) => {
-    await forwardToSheet('portal_login', req.body, res);
 });
 
-// 🛰️ Attendance punch (with server-side geofence check)
+// ─── 2. ATTENDANCE PROXY ENDPOINT ─────────────────────────────────
 app.post('/api/attendance', async (req, res) => {
-    const { latitude, longitude } = req.body;
-
-    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-        return res.json({ status: 'error', message: 'Missing or invalid location data.' });
+    try {
+        const payload = { route: 'attendance', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Attendance Proxy Error:", error);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
     }
-
-    const distance = calculateDistance(TARGET_LAT, TARGET_LON, latitude, longitude);
-    if (distance > ALLOWED_RADIUS_METERS) {
-        return res.json({
-            status: 'error',
-            message: `Access Denied: You are ${Math.round(distance)}m away from the office. Must be within ${ALLOWED_RADIUS_METERS}m.`
-        });
-    }
-
-    await forwardToSheet('attendance', req.body, res);
 });
 
-// 📝 Leave requests
+// ─── 3. LEAVE PROXY ENDPOINT ──────────────────────────────────────
 app.post('/api/leave', async (req, res) => {
-    await forwardToSheet('leave', req.body, res);
+    try {
+        const payload = { route: 'leave', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Leave Proxy Error:", error);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
 });
 
-// 📂 Payslips
+// ─── 4. PAYSLIPS PROXY ENDPOINT ───────────────────────────────────
 app.post('/api/payslips', async (req, res) => {
-    await forwardToSheet('get_payslips', req.body, res);
+    try {
+        const payload = { route: 'get_payslips', ...req.body };
+        const response = await axios.post(GOOGLE_SHEET_URL, payload);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Payslips Proxy Error:", error);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
 });
 
 app.listen(PORT, () => {

@@ -313,7 +313,8 @@
     <!-- ========== END PROFILE PANEL ========== -->
 
     <script>
-        const WEB_APP_URL = "YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL_HERE";
+        // All requests now go to your own Node server, not directly to Apps Script.
+        // Your server.js keeps the real Apps Script URL private.
 
         let currentUserProfile = null;
         let currentBalances = { EL_BAL: 0, CL_BAL: 0, ML_BAL: 0 };
@@ -406,13 +407,16 @@
             alertBox.classList.add('hidden');
 
             const payload = {
-                route: "portal_login",
                 empCode: document.getElementById('empCodeInput').value,
                 password: document.getElementById('passwordInput').value
             };
 
             try {
-                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
                 const result = await response.json();
 
                 if (result.status === "success") {
@@ -470,7 +474,6 @@
 
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const payload = {
-                    route: "attendance",
                     action: actionType,
                     name: currentUserProfile.empName,
                     phone: currentUserProfile.phone,
@@ -479,7 +482,11 @@
                     accuracy: position.coords.accuracy
                 };
                 try {
-                    const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    const response = await fetch('/api/attendance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
                     const result = await response.json();
                     if (result.status === "success") {
                         alertBox.className = "p-3 text-sm rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200";
@@ -563,7 +570,6 @@
             btn.innerText = "Transmitting to Corporate Database Pipeline...";
 
             const payload = {
-                route: "leave",
                 empCode: currentUserProfile.empCode,
                 empName: currentUserProfile.empName,
                 leaveType: typeSelected,
@@ -574,7 +580,11 @@
             };
 
             try {
-                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch('/api/leave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
                 const result = await response.json();
 
                 if (result.status === "success") {
@@ -611,10 +621,14 @@
             container.innerHTML = "";
             loader.classList.remove('hidden');
 
-            const payload = { route: "get_payslips", empCode: currentUserProfile.empCode };
+            const payload = { empCode: currentUserProfile.empCode };
 
             try {
-                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch('/api/payslips', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
                 const result = await response.json();
 
                 if (result.status === "success" && result.data && result.data.files && result.data.files.length > 0) {
